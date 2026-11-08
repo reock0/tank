@@ -23,9 +23,132 @@ jobs:
         with:
           gradle-version: '8.5'
 
-      - name: Auto-fix Manifest for AGP 8+
+      - name: Patch Crash-Free MainActivity and Manifest
         run: |
-          sed -i 's/package="com.retro.battlecity"//g' app/src/main/AndroidManifest.xml
+          cat << 'EOF' > app/src/main/AndroidManifest.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.VIBRATE" />
+              <application
+                  android:allowBackup="true"
+                  android:hardwareAccelerated="true"
+                  android:usesCleartextTraffic="true"
+                  android:icon="@mipmap/ic_launcher"
+                  android:label="FC坦克大战"
+                  android:supportsRtl="true"
+                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+                  <activity
+                      android:name=".MainActivity"
+                      android:configChanges="orientation|screenSize|keyboardHidden|keyboard"
+                      android:exported="true"
+                      android:screenOrientation="sensorLandscape">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+          cat << 'EOF' > app/src/main/java/com/retro/battlecity/MainActivity.java
+          package com.retro.battlecity;
+
+          import android.annotation.SuppressLint;
+          import android.app.Activity;
+          import android.graphics.Color;
+          import android.os.Build;
+          import android.os.Bundle;
+          import android.view.KeyEvent;
+          import android.view.View;
+          import android.view.Window;
+          import android.view.WindowManager;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+
+          public class MainActivity extends Activity {
+              private WebView webView;
+
+              @SuppressLint("SetJavaScriptEnabled")
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  try {
+                      requestWindowFeature(Window.FEATURE_NO_TITLE);
+                      getWindow().setFlags(
+                          WindowManager.LayoutParams.FLAG_FULLSCREEN | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                          WindowManager.LayoutParams.FLAG_FULLSCREEN | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                      );
+                  } catch (Throwable ignored) {}
+
+                  webView = new WebView(this);
+                  webView.setBackgroundColor(Color.parseColor("#0f0f12"));
+                  setContentView(webView);
+                  enableImmersiveFullscreen();
+
+                  try {
+                      WebSettings settings = webView.getSettings();
+                      settings.setJavaScriptEnabled(true);
+                      settings.setDomStorageEnabled(true);
+                      settings.setDatabaseEnabled(true);
+                      settings.setAllowFileAccess(true);
+                      settings.setAllowContentAccess(true);
+                      settings.setLoadWithOverviewMode(true);
+                      settings.setUseWideViewPort(true);
+                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                          settings.setMediaPlaybackRequiresUserGesture(false);
+                      }
+                      settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+                  } catch (Throwable ignored) {}
+
+                  webView.setWebViewClient(new WebViewClient());
+                  webView.setWebChromeClient(new WebChromeClient());
+                  webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+                  webView.loadUrl("file:///android_asset/index.html");
+              }
+
+              @Override
+              public boolean onKeyDown(int keyCode, KeyEvent event) {
+                  if (keyCode == KeyEvent.KEYCODE_BACK && webView != null) {
+                      webView.evaluateJavascript(
+                          "(window.onAndroidBackPressed && window.onAndroidBackPressed()) ? 'HANDLED' : 'EXIT'",
+                          result -> {
+                              if (result == null || !result.contains("HANDLED")) {
+                                  finish();
+                              }
+                          }
+                      );
+                      return true;
+                  }
+                  return super.onKeyDown(keyCode, event);
+              }
+
+              @Override
+              public void onWindowFocusChanged(boolean hasFocus) {
+                  super.onWindowFocusChanged(hasFocus);
+                  if (hasFocus) enableImmersiveFullscreen();
+              }
+
+              private void enableImmersiveFullscreen() {
+                  try {
+                      View decorView = getWindow().getDecorView();
+                      if (decorView != null) {
+                          decorView.setSystemUiVisibility(
+                              View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                              | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                              | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                              | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                              | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                              | View.SYSTEM_UI_FLAG_FULLSCREEN
+                          );
+                      }
+                  } catch (Throwable ignored) {}
+              }
+          }
+          EOF
 
       - name: Build Debug APK
         run: gradle assembleDebug --stacktrace
