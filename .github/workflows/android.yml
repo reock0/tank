@@ -18,11 +18,17 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle
+      - name: Setup Gradle 8.5
         uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.5'
+
+      - name: Auto-fix Manifest for AGP 8+
+        run: |
+          sed -i 's/package="com.retro.battlecity"//g' app/src/main/AndroidManifest.xml
 
       - name: Build Debug APK
-        run: gradle assembleDebug
+        run: gradle assembleDebug --stacktrace
 
       - name: Upload Compiled APK Artifact
         uses: actions/upload-artifact@v4
