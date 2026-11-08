@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK v2.0 Upgrade
 
 on:
   push:
@@ -23,8 +23,11 @@ jobs:
         with:
           gradle-version: '8.5'
 
-      - name: Patch Crash-Free MainActivity and Manifest
+      - name: Auto-Upgrade to v2.0 (Crash-Free + Slow Speed Switch)
         run: |
+          sed -i 's/versionCode 1/versionCode 2/g' app/build.gradle
+          sed -i 's/versionName "1.0.0"/versionName "2.0.0"/g' app/build.gradle
+
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -150,11 +153,58 @@ jobs:
           }
           EOF
 
+          python3 - << 'PYPATCH'
+          import pathlib
+          p = pathlib.Path("app/src/main/assets/index.html")
+          if p.exists():
+              s = p.read_text(encoding="utf-8")
+              if "window.__fcSpeedMul" not in s:
+                  inject_js = '''
+                  <script>
+                  (function(){
+                    window.__fcSpeedMul = 0.65;
+                    const presets = [0.45, 0.65, 0.85, 1.0, 1.25];
+                    const labels = ["超慢0.45x", "慢速0.65x", "适中0.85x", "标准1.0x", "快速1.25x"];
+                    let idx = 1;
+                    window.addEventListener("DOMContentLoaded", function(){
+                      const btn = document.createElement("button");
+                      btn.id = "floatingSpeedSwitchBtn";
+                      btn.type = "button";
+                      btn.textContent = "🐢 速度: " + labels[idx];
+                      btn.style.cssText = "position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:9999;padding:4px 12px;border-radius:999px;background:rgba(217,119,6,0.92);color:#fff;font-weight:800;font-size:12px;border:1.5px solid #fef08a;box-shadow:0 2px 10px rgba(0,0,0,0.6);";
+                      btn.onclick = function(){
+                        idx = (idx + 1) % presets.length;
+                        window.__fcSpeedMul = presets[idx];
+                        btn.textContent = "🐢 速度: " + labels[idx];
+                      };
+                      document.body.appendChild(btn);
+                    });
+                    const origRAF = window.requestAnimationFrame;
+                    let lastTick = 0;
+                    window.requestAnimationFrame = function(cb){
+                      return origRAF(function(ts){
+                        const mul = window.__fcSpeedMul || 0.65;
+                        const interval = (1000 / 60) / mul;
+                        if (!lastTick || (ts - lastTick) >= interval) {
+                          lastTick = ts;
+                          cb(ts);
+                        } else {
+                          window.requestAnimationFrame(cb);
+                        }
+                      });
+                    };
+                  })();
+                  </script>
+                  '''
+                  s = s.replace("</body>", inject_js + "\n</body>")
+                  p.write_text(s, encoding="utf-8")
+          PYPATCH
+
       - name: Build Debug APK
         run: gradle assembleDebug --stacktrace
 
       - name: Upload Compiled APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FC-Battle-City-100Stages-Android-APK
+          name: FC-Battle-City-v2.0-Upgrade-APK
           path: app/build/outputs/apk/debug/app-debug.apk
