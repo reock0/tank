@@ -1,0 +1,3708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>FC 坦克大战 · Battle City 1985 (100关宽屏横屏掌机版)</title>
+  <style>
+    :root {
+      --fc-red: #8e1515;
+      --fc-red-dark: #580b0b;
+      --fc-gold: #eab308;
+      --fc-gold-light: #fef08a;
+      --fc-cream: #f5ebd6;
+      --screen-bg: #080a0f;
+      --dpad-scale: 1;
+      --fire-scale: 1;
+      --aux-scale: 1;
+      --dpad-opacity: 0.42;
+      --fire-opacity: 0.42;
+      --aux-opacity: 0.42;
+      --pixel-font: 'Courier New', 'Press Start 2P', monospace;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 35%, #1e1b18 0%, #09090b 100%);
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    .hidden { display: none !important; }
+
+    /* ================= FAMICOM HANDHELD CONSOLE CHASSIS ================= */
+    .console-outer {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(4px, 1.2vw, 14px);
+    }
+    .fc-handheld-shell {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 1180px;
+      max-height: 700px;
+      background: linear-gradient(145deg, #a31818 0%, #7a1010 55%, #520909 100%);
+      border: 3px solid #eab308;
+      border-radius: 26px;
+      box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.9),
+        inset 0 2px 6px rgba(254, 240, 138, 0.45),
+        inset 0 -4px 10px rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: stretch;
+      padding: clamp(8px, 1.4vw, 16px);
+      gap: clamp(6px, 1vw, 12px);
+    }
+    .fc-side-grip {
+      width: 34px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 2px;
+      background: linear-gradient(180deg, rgba(234, 179, 8, 0.2), rgba(161, 98, 7, 0.35));
+      border: 1.5px solid rgba(254, 240, 138, 0.45);
+      border-radius: 16px;
+    }
+    @media (max-width: 680px) {
+      .fc-side-grip { display: none; }
+      .console-outer { padding: 2px; }
+      .fc-handheld-shell { border-radius: 14px; padding: 6px; border-width: 2px; }
+    }
+    .grip-led {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e, 0 0 14px #4ade80;
+    }
+    .grip-speaker {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .grip-speaker span {
+      display: block;
+      width: 18px;
+      height: 3px;
+      border-radius: 2px;
+      background: #2a0606;
+      box-shadow: 0 1px 0 rgba(254, 240, 138, 0.3);
+    }
+    .grip-vert-label {
+      writing-mode: vertical-rl;
+      font-family: var(--pixel-font);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: #fde047;
+      opacity: 0.85;
+    }
+
+    .fc-screen-bezel {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      background: #121318;
+      border: 3px solid #ca8a04;
+      border-radius: 16px;
+      box-shadow: inset 0 0 24px rgba(0,0,0,0.95);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .fc-bezel-footer {
+      flex-shrink: 0;
+      height: 22px;
+      background: linear-gradient(90deg, #450a0a, #7f1d1d, #450a0a);
+      border-top: 1px solid rgba(234, 179, 8, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      font-family: var(--pixel-font);
+      font-size: 10px;
+      color: #fde68a;
+    }
+
+    /* ================= SCREEN 1: STAGE SELECTION LOBBY ================= */
+    #lobbyScreen {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at 50% 10%, #1c2233 0%, #080a0f 85%);
+      z-index: 20;
+    }
+    .lobby-header {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 8px 12px;
+      background: rgba(13, 17, 27, 0.96);
+      border-bottom: 2px solid rgba(245, 158, 11, 0.55);
+    }
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 900;
+      font-size: clamp(13px, 2vw, 19px);
+      color: #fbbf24;
+      text-shadow: 0 2px 8px rgba(245, 158, 11, 0.45);
+    }
+    .brand-sub {
+      font-size: 10px;
+      color: #94a3b8;
+      font-weight: 600;
+      font-family: var(--pixel-font);
+    }
+    .lobby-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px;
+    }
+    .pill-btn {
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.22);
+      background: rgba(30, 41, 59, 0.92);
+      color: #f1f5f9;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: transform 0.1s;
+    }
+    .pill-btn:active { transform: scale(0.95); }
+    .pill-btn.gold { background: linear-gradient(135deg, #d97706, #b45309); border-color: #fde047; color: #fff; }
+    .pill-btn.green { background: linear-gradient(135deg, #059669, #047857); border-color: #6ee7b7; color: #fff; }
+    .pill-btn.blue { background: linear-gradient(135deg, #2563eb, #1d4ed8); border-color: #93c5fd; color: #fff; }
+
+    .chapter-bar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(17, 24, 39, 0.9);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      overflow-x: auto;
+    }
+    .chapter-tabs, .mode-switch {
+      display: flex;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    .chap-tab, .mode-btn {
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: #1e293b;
+      border: 1px solid rgba(255,255,255,0.14);
+      color: #cbd5e1;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .chap-tab.active {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #0a0a0d;
+      border-color: #fef08a;
+    }
+    .mode-btn.active {
+      background: #3b82f6;
+      border-color: #bfdbfe;
+      color: #fff;
+    }
+
+    .stage-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 10px 12px 20px;
+      touch-action: pan-y;
+    }
+    .stage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+      gap: 8px;
+    }
+    .stage-card {
+      background: linear-gradient(180deg, #1a2030 0%, #10141e 100%);
+      border: 1.5px solid rgba(148, 163, 184, 0.25);
+      border-radius: 10px;
+      padding: 7px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+    .stage-card:hover, .stage-card.selected {
+      border-color: #fbbf24;
+      box-shadow: 0 0 12px rgba(251, 191, 36, 0.35);
+    }
+    .stage-card-top {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 800;
+      font-family: var(--pixel-font);
+    }
+    .stage-badge {
+      padding: 1px 5px;
+      border-radius: 5px;
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+      font-size: 9px;
+    }
+    .stage-badge.boss {
+      background: rgba(239, 68, 68, 0.28);
+      color: #fca5a5;
+    }
+    .mini-preview {
+      width: 100%;
+      aspect-ratio: 21 / 15;
+      background: #000000;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.14);
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    .stage-name {
+      font-size: 11px;
+      color: #cbd5e1;
+      font-weight: 700;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+    .stage-stars {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #facc15;
+    }
+
+    /* ================= SCREEN 2: LANDSCAPE BATTLE ARENA ================= */
+    #battleScreen {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #080a0f;
+      z-index: 10;
+    }
+    .battle-top-bar {
+      flex-shrink: 0;
+      height: 34px;
+      padding: 0 8px;
+      background: rgba(14, 18, 28, 0.96);
+      border-bottom: 1px solid rgba(245, 158, 11, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 5px;
+      z-index: 15;
+      overflow-x: auto;
+    }
+    .hud-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 800;
+      font-family: var(--pixel-font);
+      white-space: nowrap;
+    }
+    .hud-chip {
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(24, 32, 48, 0.92);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fde68a;
+    }
+    .top-ctrl-btn {
+      padding: 3px 7px;
+      border-radius: 7px;
+      border: 1px solid rgba(255,255,255,0.22);
+      background: rgba(30, 41, 59, 0.92);
+      color: #f8fafc;
+      font-size: 10px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .top-ctrl-btn:active { transform: scale(0.94); }
+
+    .arena-wrapper {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #080a0f;
+    }
+    #gameCanvas {
+      background: #000000;
+      box-shadow: 0 0 26px rgba(0,0,0,0.95), 0 0 0 2px #475569;
+      border-radius: 3px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      display: block;
+    }
+    #combatToast {
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 3px 12px;
+      border-radius: 999px;
+      background: rgba(12, 16, 26, 0.92);
+      border: 1px solid rgba(251, 191, 36, 0.75);
+      color: #fde047;
+      font-size: 11px;
+      font-weight: 800;
+      font-family: var(--pixel-font);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 16;
+      white-space: nowrap;
+    }
+    #combatToast.show { opacity: 1; }
+
+    #bossHpBarWrap {
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(300px, 55vw);
+      background: rgba(12, 16, 26, 0.92);
+      border: 1.5px solid #ef4444;
+      border-radius: 999px;
+      padding: 2px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 14;
+      pointer-events: none;
+    }
+    .boss-hp-track {
+      flex: 1;
+      height: 7px;
+      background: #1e293b;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    #bossHpFill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #ef4444, #f59e0b);
+      transition: width 0.15s;
+    }
+
+    /* ================= GLASSMORPHISM HANDHELD TOUCH CONTROLS ================= */
+    .touch-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 12;
+      overflow: hidden;
+    }
+    .ctrl-draggable {
+      position: absolute;
+      pointer-events: auto;
+      touch-action: none;
+    }
+    .touch-layer.edit-mode {
+      pointer-events: auto;
+      background: rgba(5, 8, 16, 0.35);
+      background-image:
+        linear-gradient(to right, rgba(56, 189, 248, 0.14) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(56, 189, 248, 0.14) 1px, transparent 1px);
+      background-size: 28px 28px;
+      z-index: 30;
+    }
+    .touch-layer.edit-mode .ctrl-draggable {
+      outline: 2px dashed rgba(251, 191, 36, 0.85);
+      outline-offset: 4px;
+      border-radius: 16px;
+      background: rgba(15, 23, 42, 0.35);
+      cursor: grab;
+    }
+    .touch-layer.edit-mode .ctrl-draggable.selected-ctrl {
+      outline: 2.5px solid #38bdf8;
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.65);
+      z-index: 32;
+    }
+    .ctrl-drag-badge {
+      display: none;
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0f172a;
+      color: #fde047;
+      border: 1px solid #f59e0b;
+      border-radius: 999px;
+      padding: 1px 8px;
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .touch-layer.edit-mode .ctrl-drag-badge {
+      display: block;
+    }
+
+    #layoutEditorBar {
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(680px, 95%);
+      background: rgba(13, 18, 30, 0.96);
+      border: 2px solid #38bdf8;
+      border-radius: 12px;
+      padding: 6px 10px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      z-index: 40;
+      box-shadow: 0 10px 26px rgba(0,0,0,0.85);
+    }
+    .layout-bar-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+    .layout-bar-group input[type="range"] {
+      width: 74px;
+      height: 16px;
+    }
+
+    .dpad-container {
+      left: 14px;
+      bottom: 14px;
+      width: calc(156px * var(--dpad-scale));
+      height: calc(156px * var(--dpad-scale));
+      opacity: var(--dpad-opacity);
+    }
+    .dpad-base {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(30, 41, 59, 0.65) 0%, rgba(15, 23, 42, 0.45) 100%);
+      border: 2px solid rgba(255, 255, 255, 0.28);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+    .dpad-btn {
+      position: absolute;
+      width: 34%;
+      height: 34%;
+      background: rgba(51, 65, 85, 0.85);
+      border: 1.5px solid rgba(255, 255, 255, 0.35);
+      color: #f8fafc;
+      font-size: calc(16px * var(--dpad-scale));
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      pointer-events: none;
+    }
+    .dpad-btn.active {
+      background: #f59e0b;
+      color: #0a0a0d;
+      border-color: #fef08a;
+      transform: scale(0.94);
+    }
+    .dpad-up { top: 4%; left: 33%; }
+    .dpad-down { bottom: 4%; left: 33%; }
+    .dpad-left { top: 33%; left: 4%; }
+    .dpad-right { top: 33%; right: 4%; }
+    .dpad-center {
+      position: absolute;
+      top: 35%;
+      left: 35%;
+      width: 30%;
+      height: 30%;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255,255,255,0.18);
+      pointer-events: none;
+    }
+
+    .fire-main-group {
+      right: 14px;
+      bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: calc(8px * var(--fire-scale));
+      opacity: var(--fire-opacity);
+    }
+    .action-cluster-group {
+      right: 14px;
+      bottom: 92px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: calc(5px * var(--aux-scale));
+      opacity: var(--aux-opacity);
+    }
+    .act-pill {
+      padding: calc(6px * var(--aux-scale)) calc(9px * var(--aux-scale));
+      border-radius: 999px;
+      background: rgba(30, 41, 59, 0.88);
+      border: 1.5px solid rgba(255,255,255,0.32);
+      color: #f8fafc;
+      font-size: calc(10px * var(--aux-scale));
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .act-pill:active { transform: scale(0.93); background: #d97706; }
+
+    .fire-btn {
+      width: calc(62px * var(--fire-scale));
+      height: calc(62px * var(--fire-scale));
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.45);
+      font-weight: 900;
+      font-size: calc(15px * var(--fire-scale));
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.1;
+      touch-action: none;
+      cursor: pointer;
+    }
+    .fire-btn span { font-size: calc(8px * var(--fire-scale)); opacity: 0.92; }
+    .fire-btn.btn-a { background: radial-gradient(circle at 30% 30%, #ef4444, #991b1b); }
+    .fire-btn.btn-b {
+      width: calc(52px * var(--fire-scale));
+      height: calc(52px * var(--fire-scale));
+      background: radial-gradient(circle at 30% 30%, #f59e0b, #b45309);
+    }
+    .fire-btn.btn-c {
+      width: calc(46px * var(--fire-scale));
+      height: calc(46px * var(--fire-scale));
+      background: radial-gradient(circle at 30% 30%, #8b5cf6, #5b21b6);
+    }
+    .fire-btn:active { transform: scale(0.91); filter: brightness(1.25); }
+
+    /* ================= SCROLLABLE MODALS ================= */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 7, 12, 0.82);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      z-index: 50;
+    }
+    .modal-card {
+      width: min(620px, 95vw);
+      max-height: 86vh;
+      background: #131824;
+      border: 2px solid #f59e0b;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.85);
+    }
+    .modal-sticky-header {
+      flex-shrink: 0;
+      padding: 10px 14px;
+      background: #1a2133;
+      border-bottom: 1px solid rgba(245, 158, 11, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .modal-sticky-header h3 {
+      margin: 0;
+      font-size: 15px;
+      color: #fbbf24;
+    }
+    .modal-scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      padding: 12px 14px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .setting-box {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .setting-row-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .setting-val {
+      color: #fbbf24;
+      font-family: var(--pixel-font);
+      font-size: 13px;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: #f59e0b;
+      height: 22px;
+      cursor: pointer;
+    }
+    .preset-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .preset-btn {
+      padding: 5px 4px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: #1e293b;
+      color: #e2e8f0;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .preset-btn.active {
+      background: #f59e0b;
+      color: #0a0a0d;
+      border-color: #fef08a;
+    }
+
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 8px;
+    }
+    .guide-item {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .guide-icon { font-size: 18px; line-height: 1.2; flex-shrink: 0; }
+    .guide-title { font-weight: 800; color: #fbbf24; margin-bottom: 2px; font-size: 12px; }
+    .guide-desc { color: #cbd5e1; line-height: 1.35; font-size: 11px; }
+
+    .editor-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      padding: 6px 10px;
+      background: #141822;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      max-height: 82px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+    }
+    .tile-tool {
+      padding: 4px 8px;
+      border-radius: 7px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: #1e293b;
+      color: #f8fafc;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .tile-tool.active {
+      background: #f59e0b;
+      color: #0a0a0d;
+      border-color: #fef08a;
+    }
+  </style>
+</head>
+<body>
+  <div class="console-outer">
+    <div class="fc-handheld-shell">
+      <!-- Left Famicom Metallic Gold Grip -->
+      <aside class="fc-side-grip" aria-hidden="true">
+        <div class="grip-led" title="POWER ON"></div>
+        <div class="grip-vert-label">FAMICOM · 1985</div>
+        <div class="grip-speaker">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </aside>
+
+      <!-- Embedded Console Screen Bezel -->
+      <main class="fc-screen-bezel">
+        <!-- ==================== SCREEN 1: STAGE SELECTION LOBBY ==================== -->
+        <section id="lobbyScreen">
+          <header class="lobby-header">
+            <div>
+              <div class="brand-title">🎖️ FC 坦克大战 · BATTLE CITY 1985</div>
+              <div class="brand-sub">v3.4.2 掌机模拟试玩窗 · 21×15宽屏 · 100关 · 经典大口径破甲割草</div>
+            </div>
+            <div class="lobby-actions">
+              <button id="lobbySpeedBtn" class="pill-btn gold" type="button">🐢 速度: 0.7x</button>
+              <button id="openSettingsLobbyBtn" class="pill-btn" type="button">⚙️ 按键/速度</button>
+              <button id="openGuideLobbyBtn" class="pill-btn blue" type="button">📖 图鉴</button>
+              <button id="openEditorLobbyBtn" class="pill-btn green" type="button">🛠️ 地图工坊</button>
+              <button id="fullscreenLockBtn" class="pill-btn" type="button">📱 全屏横屏</button>
+            </div>
+          </header>
+
+          <div class="chapter-bar">
+            <div class="chapter-tabs" id="chapterTabs">
+              <button class="chap-tab active" data-chap="0" type="button">01-20 经典战役</button>
+              <button class="chap-tab" data-chap="1" type="button">21-40 密林战区</button>
+              <button class="chap-tab" data-chap="2" type="button">41-60 极地冰河</button>
+              <button class="chap-tab" data-chap="3" type="button">61-80 钢铁要塞</button>
+              <button class="chap-tab" data-chap="4" type="button">81-100 终极决战</button>
+            </div>
+            <div class="mode-switch">
+              <button id="mode1PBtn" class="mode-btn active" type="button">🕹️ 1P 单人</button>
+              <button id="mode2PBtn" class="mode-btn" type="button">👥 2P 双人协防</button>
+            </div>
+          </div>
+
+          <div class="stage-scroll-area" id="stageScrollArea">
+            <div class="stage-grid" id="stageGrid"></div>
+          </div>
+        </section>
+
+        <!-- ==================== SCREEN 2: LANDSCAPE BATTLE SCREEN ==================== -->
+        <section id="battleScreen" class="hidden">
+          <div class="battle-top-bar">
+            <div class="hud-group">
+              <span class="hud-chip" id="hudStage">🚩 第 1 关</span>
+              <span class="hud-chip" id="hudEnemies">👾 敌军: 20</span>
+              <span class="hud-chip" id="hudP1">🟡 1P: 3命 ★0</span>
+              <span class="hud-chip hidden" id="hudP2">🟢 2P: 3命 ★0</span>
+              <span class="hud-chip" id="hudScore">🏆 0</span>
+            </div>
+            <div class="hud-group">
+              <button id="battleSpeedBtn" class="top-ctrl-btn" type="button">🐢 0.7x</button>
+              <button id="guardTurretBtn" class="top-ctrl-btn" type="button">🗼 护巢副炮</button>
+              <button id="quickLayoutEditBtn" class="top-ctrl-btn" style="border-color:#38bdf8;color:#7dd3fc;" type="button">🎛️ 自定义按键</button>
+              <button id="openSettingsBattleBtn" class="top-ctrl-btn" type="button">⚙️ 设置</button>
+              <button id="pauseBtn" class="top-ctrl-btn" type="button">⏸️ 暂停</button>
+              <button id="restartBtn" class="top-ctrl-btn" type="button">🔄 重开</button>
+              <button id="backLobbyBtn" class="top-ctrl-btn" type="button">🏠 选关</button>
+            </div>
+          </div>
+
+          <!-- Map Editor Toolbar -->
+          <div id="editorToolbar" class="editor-toolbar hidden">
+            <button class="tile-tool active" data-tile="1" type="button">🧱 红砖墙</button>
+            <button class="tile-tool" data-tile="2" type="button">⬜ 防弹铁墙</button>
+            <button class="tile-tool" data-tile="3" type="button">🌊 河流</button>
+            <button class="tile-tool" data-tile="4" type="button">🌿 森林草丛</button>
+            <button class="tile-tool" data-tile="5" type="button">❄️ 极地冰面</button>
+            <button class="tile-tool" data-tile="6" type="button">🛢️ 高爆油桶</button>
+            <button class="tile-tool" data-tile="7" type="button">🌀 传送门A</button>
+            <button class="tile-tool" data-tile="8" type="button">🌀 传送门B</button>
+            <button class="tile-tool" data-tile="9" type="button">🚧 单向能量门</button>
+            <button class="tile-tool" data-tile="10" type="button">🟫 减速泥沼</button>
+            <button class="tile-tool" data-tile="11" type="button">🗼 中立机枪塔</button>
+            <button class="tile-tool" data-tile="0" type="button">🧹 橡皮擦</button>
+            <button id="editorPlayBtn" class="tile-tool" style="background:#059669;color:#fff;" type="button">▶️ 试玩当前地图</button>
+            <button id="editorClearBtn" class="tile-tool" style="background:#dc2626;color:#fff;" type="button">🗑️ 清空</button>
+          </div>
+
+          <div class="arena-wrapper" id="arenaWrapper">
+            <div id="combatToast"></div>
+            <div id="bossHpBarWrap" class="hidden">
+              <span style="font-size:10px;font-weight:900;color:#fca5a5;">👹 BOSS</span>
+              <div class="boss-hp-track"><div id="bossHpFill"></div></div>
+            </div>
+
+            <canvas id="gameCanvas" width="672" height="480"></canvas>
+
+            <!-- Visual Drag-to-Reposition Layout Toolbar -->
+            <div id="layoutEditorBar" class="hidden">
+              <div class="layout-bar-group">
+                <span style="color:#38bdf8;">🎛️ 拖动按键组:</span>
+                <span id="selectedCtrlLabel" style="color:#fde047;">方向十字键</span>
+              </div>
+              <div class="layout-bar-group">
+                <span>📏 大小</span>
+                <input type="range" id="editBarScaleSlider" min="60" max="160" step="5" value="100" />
+                <span id="editBarScaleVal" style="color:#fbbf24;">100%</span>
+              </div>
+              <div class="layout-bar-group">
+                <span>👁️ 透明</span>
+                <input type="range" id="editBarOpacitySlider" min="15" max="100" step="5" value="42" />
+                <span id="editBarOpacityVal" style="color:#34d399;">42%</span>
+              </div>
+              <div class="layout-bar-group">
+                <button id="resetLayoutBarBtn" class="top-ctrl-btn" type="button">🔄 恢复默认</button>
+                <button id="saveLayoutBarBtn" class="top-ctrl-btn" style="background:#059669;border-color:#6ee7b7;" type="button">✅ 保存完成</button>
+              </div>
+            </div>
+
+            <!-- Handheld Semi-Transparent Touch Layer -->
+            <div class="touch-layer" id="touchLayer">
+              <!-- 1. Left 4-Way D-Pad Group -->
+              <div class="ctrl-draggable dpad-container selected-ctrl" id="dpadGroup" data-ctrl-key="dpad" data-ctrl-name="方向十字键">
+                <div class="ctrl-drag-badge" id="badge-dpad">方向键 100%</div>
+                <div class="dpad-base">
+                  <div class="dpad-btn dpad-up" id="dpadUp">▲</div>
+                  <div class="dpad-btn dpad-down" id="dpadDown">▼</div>
+                  <div class="dpad-btn dpad-left" id="dpadLeft">◀</div>
+                  <div class="dpad-btn dpad-right" id="dpadRight">▶</div>
+                  <div class="dpad-center"></div>
+                </div>
+              </div>
+
+              <!-- 2. Right Secondary/Auxiliary Action Cluster Group -->
+              <div class="ctrl-draggable action-cluster-group" id="actionClusterGroup" data-ctrl-key="aux" data-ctrl-name="功能辅助键组">
+                <div class="ctrl-drag-badge" id="badge-aux">功能键组 100%</div>
+                <button id="cycleWeaponBtn" class="act-pill" type="button">🔫 标准炮</button>
+                <button id="placeMineBtn" class="act-pill" type="button">✴️ 埋雷(3)</button>
+                <button id="auxSpeedBtn" class="act-pill" type="button">🐢 0.7x</button>
+                <button id="auxTurretBtn" class="act-pill" type="button">🗼 副炮</button>
+                <button id="auxPauseBtn" class="act-pill" type="button">⏸️</button>
+              </div>
+
+              <!-- 3. Right Primary Fire Buttons Group -->
+              <div class="ctrl-draggable fire-main-group" id="fireMainGroup" data-ctrl-key="fire" data-ctrl-name="主开火按键组">
+                <div class="ctrl-drag-badge" id="badge-fire">开火键 100%</div>
+                <button id="btnFireC" class="fire-btn btn-c" type="button">C<span>四向</span></button>
+                <button id="btnFireB" class="fire-btn btn-b" type="button">B<span>连发</span></button>
+                <button id="btnFireA" class="fire-btn btn-a" type="button">A<span>开火</span></button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Console Bezel Status Bar -->
+        <footer class="fc-bezel-footer">
+          <span>● POCKET FAMICOM SIMULATOR · v3.4.2</span>
+          <span>⌨️ WASD/方向键移动 · 空格/J开火 · Q切武器 · E埋雷</span>
+        </footer>
+      </main>
+
+      <!-- Right Famicom Metallic Gold Grip -->
+      <aside class="fc-side-grip" aria-hidden="true">
+        <div class="grip-speaker">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="grip-vert-label">BATTLE CITY · 100</div>
+        <div style="width:12px;height:12px;border-radius:50%;border:2px solid #fde047;"></div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 1: SCROLLABLE SETTINGS MODAL ==================== -->
+  <div id="settingsModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-sticky-header">
+        <h3>⚙️ 自定义按键位置、大小、透明度与速度</h3>
+        <button id="closeSettingsBtn" class="pill-btn gold" type="button">✔️ 完成并关闭</button>
+      </div>
+      <div class="modal-scroll-body" id="settingsScrollBody">
+        <div class="setting-box" style="border-color: rgba(56, 189, 248, 0.55); background: rgba(14, 28, 48, 0.9);">
+          <div class="setting-row-top">
+            <span>🎛️ 屏幕按键位置自由拖动布局 (所见即所得)</span>
+          </div>
+          <div style="font-size:11px;color:#cbd5e1;line-height:1.4;">
+            进入可视化拖动模式后，可用鼠标或手指直接拖拽<strong>方向十字键</strong>、<strong>主开火按键组</strong>和<strong>功能辅助键组</strong>到屏幕任意位置。
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button id="enterLayoutEditFromModalBtn" class="pill-btn blue" style="flex:1;justify-content:center;" type="button">🎛️ 进入可视化拖动按键位置模式</button>
+            <button id="resetAllControlsBtn" class="pill-btn" type="button">🔄 恢复默认位置与大小</button>
+          </div>
+        </div>
+
+        <div class="setting-box">
+          <div class="setting-row-top">
+            <span>🕹️ 左侧方向十字键大小 (60% – 160%)</span>
+            <span class="setting-val" id="dpadSizeValText">100%</span>
+          </div>
+          <input type="range" id="dpadSizeSlider" min="60" max="160" step="5" value="100" />
+
+          <div class="setting-row-top" style="margin-top:4px;">
+            <span>🔥 右侧主开火按键大小 (60% – 160%)</span>
+            <span class="setting-val" id="fireSizeValText">100%</span>
+          </div>
+          <input type="range" id="fireSizeSlider" min="60" max="160" step="5" value="100" />
+
+          <div class="setting-row-top" style="margin-top:4px;">
+            <span>✴️ 右侧功能辅助键大小 (60% – 160%)</span>
+            <span class="setting-val" id="auxSizeValText">100%</span>
+          </div>
+          <input type="range" id="auxSizeSlider" min="60" max="160" step="5" value="100" />
+        </div>
+
+        <div class="setting-box">
+          <div class="setting-row-top">
+            <span>👁️ 屏幕按键整体透明度 (15% – 100%)</span>
+            <span class="setting-val" id="opacityValText">42%</span>
+          </div>
+          <input type="range" id="opacitySlider" min="15" max="100" step="5" value="42" />
+          <div class="preset-row" id="opacityPresets">
+            <button class="preset-btn" data-val="25" type="button">极简融入 25%</button>
+            <button class="preset-btn active" data-val="42" type="button">舒适半透 42%</button>
+            <button class="preset-btn" data-val="70" type="button">清晰 70%</button>
+            <button class="preset-btn" data-val="95" type="button">实体 95%</button>
+          </div>
+        </div>
+
+        <div class="setting-box">
+          <div class="setting-row-top">
+            <span>🐢 全局游戏速度倍率 (坦克与炮弹节奏)</span>
+            <span class="setting-val" id="speedValText">0.70x</span>
+          </div>
+          <input type="range" id="speedSlider" min="0.4" max="1.5" step="0.05" value="0.7" />
+          <div class="preset-row" id="speedPresets">
+            <button class="preset-btn" data-val="0.5" type="button">超慢 0.5x</button>
+            <button class="preset-btn active" data-val="0.7" type="button">慢速 0.7x</button>
+            <button class="preset-btn" data-val="1.0" type="button">标准 1.0x</button>
+            <button class="preset-btn" data-val="1.3" type="button">快速 1.3x</button>
+          </div>
+        </div>
+
+        <div class="setting-box">
+          <div class="setting-row-top">
+            <span>🎯 摇杆转向灵敏度与中心死区</span>
+            <span class="setting-val" id="sensValText">1.0x / 8px</span>
+          </div>
+          <input type="range" id="sensSlider" min="0.4" max="2.5" step="0.1" value="1.0" />
+          <input type="range" id="deadzoneSlider" min="2" max="24" step="1" value="8" />
+        </div>
+
+        <div class="setting-box">
+          <div class="setting-row-top">
+            <span>🔊 8-Bit 怀旧芯片音效开关</span>
+            <button id="toggleSoundBtn" class="pill-btn green" type="button">🔊 音效: 开启</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: SCROLLABLE ELEMENTS GUIDE ==================== -->
+  <div id="guideModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-sticky-header">
+        <h3>📖 全 22 项扩展武装、道具与地形图鉴</h3>
+        <button id="closeGuideBtn" class="pill-btn gold" type="button">✖️ 关闭图鉴</button>
+      </div>
+      <div class="modal-scroll-body" id="guideScrollBody">
+        <div class="guide-grid" id="guideGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ================= CONSTANTS & ENLARGED 21x15 WIDESCREEN GRID ================= */
+      const TILE_PX = 16;          // 16x16 micro tile
+      const MACRO_W = 21;          // 21 macro cols
+      const MACRO_H = 15;          // 15 macro rows
+      const GRID_W = MACRO_W * 2;  // 42 micro cols
+      const GRID_H = MACRO_H * 2;  // 30 micro rows
+      const CANVAS_W = GRID_W * TILE_PX; // 672
+      const CANVAS_H = GRID_H * TILE_PX; // 480
+
+      // Eagle Base centered at bottom: micro cols 20..21, rows 28..29
+      const BASE_MC = 10;
+      const BASE_MR = 14;
+      const BASE_C = BASE_MC * 2; // 20
+      const BASE_R = BASE_MR * 2; // 28
+
+      // Tile Types
+      const T_EMPTY = 0;
+      const T_BRICK = 1;
+      const T_STEEL = 2;
+      const T_WATER = 3;
+      const T_FOREST = 4;
+      const T_ICE = 5;
+      const T_BARREL = 6;       // Explosive Fuel Barrel
+      const T_PORTAL_A = 7;     // Teleporter A
+      const T_PORTAL_B = 8;     // Teleporter B
+      const T_ONEWAY = 9;       // One-way Energy Gate
+      const T_MUD = 10;         // Slow Mud Swamp
+      const T_TURRET_N = 11;    // Neutral Auto-Turret
+      const T_TURRET_A = 12;    // Allied Auto-Turret
+      const T_EAGLE = 99;
+
+      const FULL_BRICK_MASK = 15;
+      const DIR_DX = [0, 1, 0, -1];
+      const DIR_DY = [-1, 0, 1, 0];
+
+      const WEAPONS = [
+        { id: 'standard', name: '🔫 标准炮', cd: 22 },
+        { id: 'laser',    name: '⚡ 激光炮', cd: 30 },
+        { id: 'flame',    name: '🔥 喷火器', cd: 10 },
+        { id: 'mortar',   name: '💣 迫击炮', cd: 38 },
+        { id: 'ricochet', name: '🔮 折射弹', cd: 26 }
+      ];
+
+      const GUIDE_ITEMS = [
+        { icon: '⛵', title: '两栖气垫船', desc: '拾取后套上气垫圈，可直接驶过河流并额外抵挡 1 发炮弹。' },
+        { icon: '🔫', title: '满级手枪', desc: '拾取后直接一步升至 3 星满级破甲状态，可击穿防弹铁墙并一并割除草丛。' },
+        { icon: '✴️', title: '遥控防坦地雷', desc: '点击右侧「埋雷」在当前网格布雷（上限3颗），敌坦驶入即刻引爆秒杀。' },
+        { icon: '🧱', title: '工兵修墙包', desc: '在坦克正前方生成铁墙掩体，同时将老巢外围加固为防弹铁墙。' },
+        { icon: '📡', title: '友军呼叫信标', desc: '召唤 1 辆 AI 蓝军协防坦克并激活老巢两侧自动防空副炮 20 秒。' },
+        { icon: '★', title: '五角星升级', desc: '0星→1星加速弹→2星双连发→3星破铁墙+割草（单发大口径可同时击碎2块相邻方砖）。' },
+        { icon: '💣', title: '全屏手雷', desc: '引爆当前场上所有敌军坦克并计入总得分。' },
+        { icon: '⏱', title: '定时怀表', desc: '冻结全体敌军坦克与炮台行动 10 秒。' },
+        { icon: '🛡', title: '无敌护盾', desc: '获得 12 秒全向防弹能量护罩。' },
+        { icon: '⚡', title: '四向贯穿激光炮', desc: '沿正方向发射瞬达光束，穿透同一直线上的多辆敌坦与砖墙。' },
+        { icon: '🔥', title: '烈焰喷射器', desc: '前方 3 格持续喷火，可烧毁绿色森林草丛与砖墙。' },
+        { icon: '💣', title: '重型高抛迫击炮', desc: '炮弹越过前方障碍物，在前方第 4 格落地产生 2×2 范围爆炸。' },
+        { icon: '🔮', title: '90° 直角折射弹', desc: '命中铁墙或边界时产生 90° 折返弹射，隔墙打击拐角敌军。' },
+        { icon: '🛢️', title: '高爆燃油桶', desc: '击中后引发 3×3 宏格链式大爆炸，炸毁周围砖墙与敌坦。' },
+        { icon: '🌀', title: '双向传送门', desc: '坦克或炮弹驶入蓝门后立即从另一侧橙门同向穿出。' },
+        { icon: '🚧', title: '单向能量门', desc: '仅允许我方通行与射击，外侧敌军炮弹无法穿透。' },
+        { icon: '🟫', title: '减速泥沼带', desc: '驶入泥泞地面移速降低 50%，适合配合火力伏击。' },
+        { icon: '🗼', title: '中立自动机枪塔', desc: '初始为橙色中立炮台；用炮弹击中它即可策反为绿色友军炮台（绝不误伤老巢）。' },
+        { icon: '🚤', title: '敌军两栖/隐身/推土坦', desc: '新增可渡河的水陆突击坦、半透明隐身坦、推平墙体的工兵坦与分裂子母坦。' },
+        { icon: '👹', title: '2×2 巨型守关 Boss', desc: '每逢第 10、20…100 关登场，拥有 20 HP 独立血条与双联主炮。' }
+      ];
+
+      /* ================= 8-BIT WEB AUDIO SYNTHESIZER ================= */
+      let audioCtx = null;
+      function playTone(freq, type, duration, vol = 0.08, slideTo = null) {
+        if (saveState.soundOn === false) return;
+        try {
+          if (!audioCtx) {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (Ctx) audioCtx = new Ctx();
+          }
+          if (!audioCtx) return;
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          if (slideTo) {
+            osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), audioCtx.currentTime + duration);
+          }
+          gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
+        } catch (e) {}
+      }
+
+      const SFX = {
+        shoot: () => playTone(520, 'square', 0.08, 0.06, 180),
+        laser: () => playTone(1200, 'sawtooth', 0.14, 0.07, 260),
+        explode: () => playTone(140, 'sawtooth', 0.24, 0.11, 35),
+        powerup: () => { playTone(523, 'triangle', 0.08, 0.08); setTimeout(() => playTone(784, 'triangle', 0.12, 0.08), 75); },
+        hitArmor: () => playTone(280, 'square', 0.06, 0.07, 420),
+        win: () => { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => playTone(f, 'square', 0.14, 0.08), i * 110)); },
+        lose: () => { [392, 349, 311, 261].forEach((f, i) => setTimeout(() => playTone(f, 'sawtooth', 0.18, 0.09), i * 140)); }
+      };
+
+      /* ================= PERSISTENT STATE & CONTROL LAYOUT ================= */
+      const STORAGE_KEY = 'fc_battle_city_widescreen_v34';
+      const CONTROLS_STORAGE_KEY = 'fc_battle_city_controls_v34';
+
+      const DEFAULT_CONTROLS = {
+        dpad: { xPct: null, yPct: null, scale: 100, opacity: 42 },
+        fire: { xPct: null, yPct: null, scale: 100, opacity: 42 },
+        aux:  { xPct: null, yPct: null, scale: 100, opacity: 42 }
+      };
+
+      let saveState = {
+        stars: {},
+        highScore: 0,
+        speed: 0.7,
+        sensitivity: 1.0,
+        deadzone: 8,
+        soundOn: true
+      };
+
+      let controlLayout = JSON.parse(JSON.stringify(DEFAULT_CONTROLS));
+
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) Object.assign(saveState, JSON.parse(raw));
+        const rawCtrl = localStorage.getItem(CONTROLS_STORAGE_KEY);
+        if (rawCtrl) {
+          const parsed = JSON.parse(rawCtrl);
+          ['dpad', 'fire', 'aux'].forEach(k => {
+            if (parsed[k]) Object.assign(controlLayout[k], parsed[k]);
+          });
+        }
+      } catch (e) {}
+
+      function persistSave() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(saveState));
+          localStorage.setItem(CONTROLS_STORAGE_KEY, JSON.stringify(controlLayout));
+        } catch (e) {}
+      }
+
+      /* ================= GAME RUNTIME VARIABLES ================= */
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+
+      let currentChapter = 0;
+      let currentStageIdx = 0;
+      let twoPlayerMode = false;
+      let isEditorMode = false;
+      let selectedEditorTile = T_BRICK;
+
+      let map = Array.from({ length: GRID_H }, () => Array(GRID_W).fill(T_EMPTY));
+      let brickMask = Array.from({ length: GRID_H }, () => Array(GRID_W).fill(FULL_BRICK_MASK));
+      let customEditorMap = null;
+
+      let players = [];
+      let enemies = [];
+      let allies = [];
+      let bullets = [];
+      let mines = [];
+      let powerups = [];
+      let particles = [];
+      let lasers = [];
+
+      let enemiesRemainingToSpawn = 20;
+      let spawnTimer = 0;
+      let spawnSlotIdx = 0;
+      let freezeTimer = 0;
+      let baseShovelTimer = 0;
+      let baseTurretTimer = 0;
+      let baseAlive = true;
+      let stageCleared = false;
+      let gameOver = false;
+      let paused = false;
+      let layoutEditMode = false;
+      let selectedCtrlKey = 'dpad';
+      let score = 0;
+      let tickCount = 0;
+      let stageTimeTicks = 0;
+      let deathsInStage = 0;
+      let rafId = null;
+      let lastFrameTime = 0;
+
+      const keysDown = {};
+      let dpadDir = -1;
+      let fireAPressed = false;
+      let fireBPressed = false;
+
+      /* ================= 100-STAGE GENERATOR (21x15 MACRO) ================= */
+      const STAGE_NAMES = [
+        '钢铁前线', '双桥峡谷', '红砖迷宫', '河畔阻击', '密林伏击',
+        '冰原疾驰', '十字要塞', '双子传送', '油桶阵地', '铁甲首领',
+        '沼泽泥潭', '中央炮台', '单向防线', '水陆两栖', '幽灵夜袭',
+        '推土狂潮', '子母裂变', '焦土防卫', '黄金堡垒', '终极决战'
+      ];
+
+      function generateStageMap(stageIdx) {
+        const grid = Array.from({ length: GRID_H }, () => Array(GRID_W).fill(T_EMPTY));
+        const chapter = Math.floor(stageIdx / 20);
+        let rngState = (stageIdx + 1) * 9301 + 49297;
+        function rand() {
+          rngState = (rngState * 1664525 + 1013904223) % 4294967296;
+          return rngState / 4294967296;
+        }
+
+        function setMacroTile(mc, mr, tileType) {
+          if (mc < 0 || mc >= MACRO_W || mr < 0 || mr >= MACRO_H) return;
+          for (let dr = 0; dr < 2; dr++) {
+            for (let dc = 0; dc < 2; dc++) {
+              grid[mr * 2 + dr][mc * 2 + dc] = tileType;
+            }
+          }
+        }
+
+        for (let mr = 1; mr < MACRO_H - 1; mr++) {
+          for (let mc = 1; mc <= Math.floor(MACRO_W / 2); mc++) {
+            if (mr <= 1 && (mc === 0 || mc === 5 || mc === 10)) continue;
+            if (mr >= MACRO_H - 3 && mc >= BASE_MC - 3 && mc <= BASE_MC + 3) continue;
+
+            const rVal = rand();
+            let chosen = T_EMPTY;
+
+            if (chapter === 0) {
+              if (rVal < 0.34) chosen = T_BRICK;
+              else if (rVal < 0.44) chosen = T_STEEL;
+              else if (rVal < 0.49) chosen = T_FOREST;
+              else if (rVal < 0.52) chosen = T_BARREL;
+            } else if (chapter === 1) {
+              if (rVal < 0.34) chosen = T_FOREST;
+              else if (rVal < 0.52) chosen = T_BRICK;
+              else if (rVal < 0.60) chosen = T_MUD;
+              else if (rVal < 0.64) chosen = T_BARREL;
+            } else if (chapter === 2) {
+              if (rVal < 0.28) chosen = T_ICE;
+              else if (rVal < 0.44 && mr >= 4 && mr <= 10) chosen = T_WATER;
+              else if (rVal < 0.60) chosen = T_BRICK;
+              else if (rVal < 0.66) chosen = T_STEEL;
+            } else if (chapter === 3) {
+              if (rVal < 0.26) chosen = T_STEEL;
+              else if (rVal < 0.46) chosen = T_BRICK;
+              else if (rVal < 0.52) chosen = T_ONEWAY;
+              else if (rVal < 0.57) chosen = T_BARREL;
+            } else {
+              if (rVal < 0.24) chosen = T_BRICK;
+              else if (rVal < 0.36) chosen = T_STEEL;
+              else if (rVal < 0.44) chosen = T_FOREST;
+              else if (rVal < 0.50) chosen = T_ICE;
+              else if (rVal < 0.55) chosen = T_MUD;
+              else if (rVal < 0.60) chosen = T_BARREL;
+            }
+
+            const mirrorMc = MACRO_W - 1 - mc;
+            setMacroTile(mc, mr, chosen);
+            setMacroTile(mirrorMc, mr, chosen);
+          }
+        }
+
+        if (stageIdx >= 2) {
+          setMacroTile(1, 7, T_PORTAL_A);
+          setMacroTile(MACRO_W - 2, 7, T_PORTAL_B);
+        }
+
+        if (stageIdx >= 3) {
+          setMacroTile(10, 6, T_TURRET_N);
+        }
+
+        [0, 5, 10, 15, 20].forEach(smc => {
+          setMacroTile(smc, 0, T_EMPTY);
+          setMacroTile(smc, 1, T_EMPTY);
+        });
+
+        setMacroTile(BASE_MC - 2, BASE_MR, T_EMPTY);
+        setMacroTile(BASE_MC + 2, BASE_MR, T_EMPTY);
+        buildBaseWall(grid, T_BRICK);
+        setMacroTile(BASE_MC, BASE_MR, T_EAGLE);
+
+        return grid;
+      }
+
+      function resetBrickMasks() {
+        for (let r = 0; r < GRID_H; r++) {
+          for (let c = 0; c < GRID_W; c++) {
+            brickMask[r][c] = FULL_BRICK_MASK;
+          }
+        }
+      }
+
+      function buildBaseWall(targetGrid, wallType) {
+        for (let r = BASE_R - 1; r <= BASE_R + 1; r++) {
+          for (let c = BASE_C - 1; c <= BASE_C + 2; c++) {
+            if (r >= BASE_R && r <= BASE_R + 1 && c >= BASE_C && c <= BASE_C + 1) continue;
+            if (r >= 0 && r < GRID_H && c >= 0 && c < GRID_W) {
+              targetGrid[r][c] = wallType;
+              if (brickMask[r]) brickMask[r][c] = FULL_BRICK_MASK;
+            }
+          }
+        }
+      }
+
+      /* ================= LOBBY MINI-MAP RENDERING ================= */
+      function renderMiniPreview(canvasEl, stageIdx) {
+        const mctx = canvasEl.getContext('2d');
+        mctx.imageSmoothingEnabled = false;
+        const g = generateStageMap(stageIdx);
+        mctx.fillStyle = '#000000';
+        mctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
+        const cw = canvasEl.width / GRID_W;
+        const ch = canvasEl.height / GRID_H;
+        for (let r = 0; r < GRID_H; r++) {
+          for (let c = 0; c < GRID_W; c++) {
+            const t = g[r][c];
+            if (t === T_EMPTY) continue;
+            if (t === T_BRICK) mctx.fillStyle = '#c84c0c';
+            else if (t === T_STEEL) mctx.fillStyle = '#bcbcbc';
+            else if (t === T_WATER) mctx.fillStyle = '#2048d0';
+            else if (t === T_FOREST) mctx.fillStyle = '#189818';
+            else if (t === T_ICE) mctx.fillStyle = '#a8e0f8';
+            else if (t === T_BARREL) mctx.fillStyle = '#ef4444';
+            else if (t === T_PORTAL_A) mctx.fillStyle = '#38bdf8';
+            else if (t === T_PORTAL_B) mctx.fillStyle = '#fb923c';
+            else if (t === T_ONEWAY) mctx.fillStyle = '#3cbcfc';
+            else if (t === T_MUD) mctx.fillStyle = '#6b4423';
+            else if (t === T_TURRET_N) mctx.fillStyle = '#f97316';
+            else if (t === T_EAGLE) mctx.fillStyle = '#f8d830';
+            mctx.fillRect(Math.floor(c * cw), Math.floor(r * ch), Math.ceil(cw), Math.ceil(ch));
+          }
+        }
+      }
+
+      function renderStageCardsGallery() {
+        const gridEl = document.getElementById('stageGrid');
+        gridEl.innerHTML = '';
+        const start = currentChapter * 20;
+        const end = start + 20;
+        for (let idx = start; idx < end; idx++) {
+          const isBoss = (idx + 1) % 10 === 0;
+          const starCount = saveState.stars[idx] || 0;
+          const card = document.createElement('div');
+          card.className = 'stage-card' + (idx === currentStageIdx ? ' selected' : '');
+          const name = STAGE_NAMES[idx % STAGE_NAMES.length];
+          card.innerHTML = `
+            <div class="stage-card-top">
+              <span>第 ${String(idx + 1).padStart(2, '0')} 关</span>
+              <span class="stage-badge ${isBoss ? 'boss' : ''}">${isBoss ? '👹 BOSS' : '⚔️ 战役'}</span>
+            </div>
+            <canvas class="mini-preview" width="126" height="90"></canvas>
+            <div class="stage-name">${name}</div>
+            <div class="stage-stars">${'★'.repeat(starCount)}${'☆'.repeat(3 - starCount)}</div>
+          `;
+          renderMiniPreview(card.querySelector('canvas'), idx);
+          card.addEventListener('click', () => {
+            currentStageIdx = idx;
+            isEditorMode = false;
+            startStage(idx);
+          });
+          gridEl.appendChild(card);
+        }
+      }
+
+      /* ================= ENTITIES & TANK FACTORY ================= */
+      function createPlayer(id, x, y) {
+        return {
+          id,
+          x,
+          y,
+          dir: 0,
+          speed: 2.1,
+          lives: 3,
+          stars: 0,
+          weaponIdx: 0,
+          mines: 3,
+          shieldTimer: 180,
+          hasBoat: false,
+          cooldown: 0,
+          portalCd: 0
+        };
+      }
+
+      function createEnemy(type, x, y, isDropper = false) {
+        const isBoss = type === 'boss';
+        const size = isBoss ? 64 : 32;
+        let hp = 1;
+        let spd = 1.35;
+        let color = '#bcbcbc';
+        if (type === 'fast') { spd = 2.15; color = '#78c8f8'; }
+        else if (type === 'rapid') { spd = 1.5; color = '#f0a830'; }
+        else if (type === 'armor') { hp = 4; spd = 1.15; color = '#38b838'; }
+        else if (type === 'amphibious') { hp = 2; spd = 1.45; color = '#14b8a6'; }
+        else if (type === 'stealth') { hp = 2; spd = 1.65; color = '#c084fc'; }
+        else if (type === 'bulldozer') { hp = 3; spd = 1.25; color = '#f97316'; }
+        else if (type === 'splitter') { hp = 2; spd = 1.5; color = '#a855f7'; }
+        else if (type === 'mini') { hp = 1; spd = 2.3; color = '#e879f9'; }
+        else if (type === 'boss') { hp = 20; spd = 0.9; color = '#e83838'; }
+
+        return {
+          type,
+          x,
+          y,
+          size,
+          dir: 2,
+          hp,
+          maxHp: hp,
+          speed: spd,
+          color,
+          isDropper,
+          cooldown: 40,
+          aiTurnTimer: 50,
+          revealTimer: 0,
+          portalCd: 0
+        };
+      }
+
+      /* ================= STAGE LOADING & GAMEPLAY ACTIONS ================= */
+      function showToast(msg) {
+        const el = document.getElementById('combatToast');
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(el._tid);
+        el._tid = setTimeout(() => el.classList.remove('show'), 2200);
+      }
+
+      function startStage(stageIdx, useCustom = false) {
+        currentStageIdx = stageIdx;
+        document.getElementById('lobbyScreen').classList.add('hidden');
+        document.getElementById('battleScreen').classList.remove('hidden');
+
+        if (isEditorMode) {
+          document.getElementById('editorToolbar').classList.remove('hidden');
+        } else {
+          document.getElementById('editorToolbar').classList.add('hidden');
+        }
+
+        resetBrickMasks();
+        map = useCustom && customEditorMap
+          ? customEditorMap.map(row => row.slice())
+          : generateStageMap(stageIdx);
+
+        const prevP1 = players[0];
+        const prevP2 = players[1];
+
+        players = [
+          createPlayer(1, (BASE_C - 4) * TILE_PX, BASE_R * TILE_PX)
+        ];
+        if (prevP1 && prevP1.lives > 0 && !useCustom) {
+          players[0].lives = prevP1.lives;
+          players[0].stars = prevP1.stars;
+          players[0].weaponIdx = prevP1.weaponIdx;
+        }
+
+        if (twoPlayerMode) {
+          players.push(createPlayer(2, (BASE_C + 4) * TILE_PX, BASE_R * TILE_PX));
+          if (prevP2 && prevP2.lives > 0 && !useCustom) {
+            players[1].lives = prevP2.lives;
+            players[1].stars = prevP2.stars;
+            players[1].weaponIdx = prevP2.weaponIdx;
+          }
+        }
+
+        enemies = [];
+        allies = [];
+        bullets = [];
+        mines = [];
+        powerups = [];
+        particles = [];
+        lasers = [];
+
+        enemiesRemainingToSpawn = 16 + Math.min(14, Math.floor(stageIdx / 4));
+        spawnTimer = 20;
+        spawnSlotIdx = 0;
+        freezeTimer = 0;
+        baseShovelTimer = 0;
+        baseTurretTimer = 0;
+        baseAlive = true;
+        stageCleared = false;
+        gameOver = false;
+        paused = false;
+        stageTimeTicks = 0;
+        deathsInStage = 0;
+
+        document.getElementById('bossHpBarWrap').classList.add('hidden');
+        resizeCanvasDisplay();
+        updateHUD();
+        showToast(`🚩 第 ${stageIdx + 1} 关 · ${STAGE_NAMES[stageIdx % STAGE_NAMES.length]} 开始！`);
+      }
+
+      function updateHUD() {
+        document.getElementById('hudStage').textContent = isEditorMode ? '🛠️ 自定义工坊' : `🚩 第 ${currentStageIdx + 1} 关`;
+        document.getElementById('hudEnemies').textContent = `👾 敌军: ${enemiesRemainingToSpawn + enemies.length}`;
+        const p1 = players[0];
+        if (p1) {
+          document.getElementById('hudP1').textContent = `🟡 1P: ${p1.lives}命 ★${p1.stars}${p1.hasBoat ? ' ⛵' : ''}`;
+          document.getElementById('cycleWeaponBtn').textContent = WEAPONS[p1.weaponIdx].name;
+          document.getElementById('placeMineBtn').textContent = `✴️ 埋雷(${p1.mines})`;
+        }
+        const p2El = document.getElementById('hudP2');
+        if (twoPlayerMode && players[1]) {
+          p2El.classList.remove('hidden');
+          p2El.textContent = `🟢 2P: ${players[1].lives}命 ★${players[1].stars}`;
+        } else {
+          p2El.classList.add('hidden');
+        }
+        document.getElementById('hudScore').textContent = `🏆 ${score}`;
+      }
+
+      /* ================= COLLISION & TERRAIN HELPERS ================= */
+      function canTankMoveTo(nx, ny, size, isPlayer, hasBoat) {
+        if (nx < 0 || ny < 0 || nx + size > CANVAS_W || ny + size > CANVAS_H) return false;
+        const c1 = Math.floor((nx + 2) / TILE_PX);
+        const c2 = Math.floor((nx + size - 3) / TILE_PX);
+        const r1 = Math.floor((ny + 2) / TILE_PX);
+        const r2 = Math.floor((ny + size - 3) / TILE_PX);
+
+        for (let r = r1; r <= r2; r++) {
+          for (let c = c1; c <= c2; c++) {
+            const t = map[r][c];
+            if (t === T_BRICK || t === T_STEEL || t === T_BARREL || t === T_EAGLE || t === T_TURRET_N || t === T_TURRET_A) {
+              return false;
+            }
+            if (t === T_WATER && !hasBoat) {
+              return false;
+            }
+            if (t === T_ONEWAY && !isPlayer) {
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+
+      function getTerrainSpeedFactor(x, y, size) {
+        const cx = Math.floor((x + size / 2) / TILE_PX);
+        const cy = Math.floor((y + size / 2) / TILE_PX);
+        if (cy >= 0 && cy < GRID_H && cx >= 0 && cx < GRID_W) {
+          const t = map[cy][cx];
+          if (t === T_MUD) return 0.5;
+          if (t === T_ICE) return 1.35;
+        }
+        return 1.0;
+      }
+
+      function checkPortalWarp(entity, size) {
+        if (entity.portalCd > 0) {
+          entity.portalCd--;
+          return;
+        }
+        const cx = Math.floor((entity.x + size / 2) / TILE_PX);
+        const cy = Math.floor((entity.y + size / 2) / TILE_PX);
+        if (cy < 0 || cy >= GRID_H || cx < 0 || cx >= GRID_W) return;
+        const t = map[cy][cx];
+        if (t === T_PORTAL_A || t === T_PORTAL_B) {
+          const targetType = t === T_PORTAL_A ? T_PORTAL_B : T_PORTAL_A;
+          for (let r = 0; r < GRID_H; r++) {
+            for (let c = 0; c < GRID_W; c++) {
+              if (map[r][c] === targetType) {
+                entity.x = c * TILE_PX;
+                entity.y = r * TILE_PX;
+                entity.portalCd = 70;
+                spawnExplosion(entity.x + size / 2, entity.y + size / 2, '#38bdf8', 10);
+                return;
+              }
+            }
+          }
+        }
+      }
+
+      function damageBrickTile(r, c, bulletDir, power) {
+        if (power >= 2) {
+          map[r][c] = T_EMPTY;
+          brickMask[r][c] = FULL_BRICK_MASK;
+          return;
+        }
+        let mask = brickMask[r][c];
+        if (bulletDir === 0) {
+          if (mask & 12) mask &= ~12;
+          else mask &= ~3;
+        } else if (bulletDir === 2) {
+          if (mask & 3) mask &= ~3;
+          else mask &= ~12;
+        } else if (bulletDir === 1) {
+          if (mask & 5) mask &= ~5;
+          else mask &= ~10;
+        } else if (bulletDir === 3) {
+          if (mask & 10) mask &= ~10;
+          else mask &= ~5;
+        }
+        if (mask <= 0) {
+          map[r][c] = T_EMPTY;
+          brickMask[r][c] = FULL_BRICK_MASK;
+        } else {
+          brickMask[r][c] = mask;
+        }
+      }
+
+      function triggerBarrelExplosion(bc, br) {
+        SFX.explode();
+        spawnExplosion(bc * TILE_PX + 8, br * TILE_PX + 8, '#f97316', 26);
+        for (let r = br - 2; r <= br + 3; r++) {
+          for (let c = bc - 2; c <= bc + 3; c++) {
+            if (r < 0 || r >= GRID_H || c < 0 || c >= GRID_W) continue;
+            const t = map[r][c];
+            if (t === T_BRICK || t === T_FOREST || t === T_BARREL) {
+              map[r][c] = T_EMPTY;
+              brickMask[r][c] = FULL_BRICK_MASK;
+            }
+          }
+        }
+        const bx = bc * TILE_PX + 8;
+        const by = br * TILE_PX + 8;
+        for (let i = enemies.length - 1; i >= 0; i--) {
+          const e = enemies[i];
+          if (Math.hypot((e.x + e.size / 2) - bx, (e.y + e.size / 2) - by) < 68) {
+            damageEnemy(i, 4);
+          }
+        }
+      }
+
+      function spawnExplosion(x, y, color = '#f59e0b', count = 14) {
+        const xi = Math.round(x);
+        const yi = Math.round(y);
+        for (let i = 0; i < count; i++) {
+          const ang = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.35;
+          const spd = 1 + Math.random() * 2.8;
+          particles.push({
+            x: xi,
+            y: yi,
+            vx: Math.cos(ang) * spd,
+            vy: Math.sin(ang) * spd,
+            life: 18 + Math.floor(Math.random() * 10),
+            maxLife: 26,
+            color,
+            isBlastCore: i === 0
+          });
+        }
+      }
+
+      /* ================= WEAPONS & SPECIAL ACTIONS ================= */
+      function firePlayerWeapon(p, fireMode = 'single') {
+        if (!p || p.lives <= 0 || p.cooldown > 0) return;
+        const w = WEAPONS[p.weaponIdx];
+        const speedBonus = p.stars >= 1 ? 1.4 : 1.0;
+        const bulletPower = p.stars >= 3 ? 2 : 1;
+        const canBreakSteel = bulletPower >= 2;
+        const canCutGrass = canBreakSteel || w.id === 'flame' || w.id === 'mortar';
+
+        if (fireMode === 'barrage') {
+          p.cooldown = 34;
+          SFX.laser();
+          for (let d = 0; d < 4; d++) {
+            bullets.push({
+              x: p.x + 16 + DIR_DX[d] * 18,
+              y: p.y + 16 + DIR_DY[d] * 18,
+              dir: d,
+              speed: 5.5 * speedBonus,
+              owner: 'player',
+              kind: 'standard',
+              life: 140,
+              power: bulletPower,
+              canBreakSteel,
+              canCutGrass
+            });
+          }
+          return;
+        }
+
+        const baseCd = fireMode === 'rapid' ? Math.max(8, Math.floor(w.cd * 0.65)) : w.cd;
+        p.cooldown = p.stars >= 2 ? Math.max(7, Math.floor(baseCd * 0.75)) : baseCd;
+
+        const mx = p.x + 16 + DIR_DX[p.dir] * 18;
+        const my = p.y + 16 + DIR_DY[p.dir] * 18;
+
+        if (w.id === 'laser') {
+          SFX.laser();
+          fireLaserBeam(mx, my, p.dir, canBreakSteel, canCutGrass);
+          return;
+        }
+
+        SFX.shoot();
+        if (w.id === 'flame') {
+          bullets.push({
+            x: mx, y: my, dir: p.dir, speed: 4.5, owner: 'player',
+            kind: 'flame', life: 16, power: 1,
+            canBreakSteel: false,
+            canCutGrass: true
+          });
+        } else if (w.id === 'mortar') {
+          bullets.push({
+            x: mx, y: my, dir: p.dir, speed: 4.2, owner: 'player',
+            kind: 'mortar', life: 30, power: 3,
+            canBreakSteel: true,
+            canCutGrass: true
+          });
+        } else if (w.id === 'ricochet') {
+          bullets.push({
+            x: mx, y: my, dir: p.dir, speed: 5.4 * speedBonus, owner: 'player',
+            kind: 'ricochet', bounces: 2, life: 160, power: bulletPower,
+            canBreakSteel,
+            canCutGrass
+          });
+        } else {
+          bullets.push({
+            x: mx, y: my, dir: p.dir, speed: 5.2 * speedBonus, owner: 'player',
+            kind: 'standard', life: 150, power: bulletPower,
+            canBreakSteel,
+            canCutGrass
+          });
+        }
+      }
+
+      function fireLaserBeam(sx, sy, dir, canBreakSteel = true, canCutGrass = true) {
+        let ex = sx;
+        let ey = sy;
+        const perpOffsets = dir === 0 || dir === 2 ? [-7.5, 7.5] : [0, 0];
+        const perpOffsetsY = dir === 1 || dir === 3 ? [-7.5, 7.5] : [0, 0];
+
+        for (let step = 0; step < 42; step++) {
+          ex += DIR_DX[dir] * 16;
+          ey += DIR_DY[dir] * 16;
+          if (ex < 0 || ex >= CANVAS_W || ey < 0 || ey >= CANVAS_H) break;
+
+          let blockedBySteel = false;
+          for (let k = 0; k < 2; k++) {
+            const sampleX = Math.max(0, Math.min(CANVAS_W - 1, ex + perpOffsets[k]));
+            const sampleY = Math.max(0, Math.min(CANVAS_H - 1, ey + perpOffsetsY[k]));
+            const c = Math.floor(sampleX / TILE_PX);
+            const r = Math.floor(sampleY / TILE_PX);
+            const t = map[r][c];
+            if (t === T_EAGLE) {
+              blockedBySteel = true;
+              break;
+            }
+            if (t === T_STEEL) {
+              if (canBreakSteel) {
+                map[r][c] = T_EMPTY;
+                brickMask[r][c] = FULL_BRICK_MASK;
+              } else {
+                blockedBySteel = true;
+                break;
+              }
+            } else if (t === T_BRICK) {
+              map[r][c] = T_EMPTY;
+              brickMask[r][c] = FULL_BRICK_MASK;
+            } else if (t === T_FOREST && (canCutGrass || canBreakSteel)) {
+              map[r][c] = T_EMPTY;
+            } else if (t === T_BARREL) {
+              triggerBarrelExplosion(c, r);
+            } else if (t === T_TURRET_N) {
+              map[r][c] = T_TURRET_A;
+              showToast('🗼 中立机枪塔已策反为友军炮台！');
+            }
+          }
+          if (blockedBySteel) break;
+
+          for (let i = enemies.length - 1; i >= 0; i--) {
+            const e = enemies[i];
+            if (ex >= e.x - 6 && ex <= e.x + e.size + 6 && ey >= e.y - 6 && ey <= e.y + e.size + 6) {
+              damageEnemy(i, 2);
+            }
+          }
+        }
+        lasers.push({ x1: sx, y1: sy, x2: ex, y2: ey, life: 10 });
+      }
+
+      function placeLandmine(p) {
+        if (!p || p.lives <= 0) return;
+        if (p.mines <= 0) {
+          showToast('⚠️ 地雷已用完，拾取 ✴️ 空投可补充');
+          return;
+        }
+        const activeMines = mines.filter(m => m.ownerId === p.id).length;
+        if (activeMines >= 3) {
+          showToast('⚠️ 场上最多同时埋设 3 颗地雷');
+          return;
+        }
+        p.mines--;
+        mines.push({
+          x: p.x + 16,
+          y: p.y + 16,
+          ownerId: p.id,
+          armTimer: 25
+        });
+        updateHUD();
+        SFX.powerup();
+        showToast('✴️ 已埋设防坦地雷！');
+      }
+
+      /* ================= POWERUPS & DAMAGE ================= */
+      function spawnRandomPowerup() {
+        const types = ['star', 'grenade', 'watch', 'shovel', 'shield', '1up', 'boat', 'pistol', 'minepack', 'wallbuilder', 'beacon'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        const px = (2 + Math.floor(Math.random() * (MACRO_W - 4))) * 32;
+        const py = (2 + Math.floor(Math.random() * (MACRO_H - 4))) * 32;
+        powerups.push({ x: px, y: py, type, timer: 720 });
+      }
+
+      function applyPowerup(p, type) {
+        SFX.powerup();
+        score += 500;
+        if (type === 'star') {
+          p.stars = Math.min(3, p.stars + 1);
+          showToast('★ 火力升级！当前星级: ★' + p.stars);
+        } else if (type === 'pistol') {
+          p.stars = 3;
+          showToast('🔫 满级手枪！直升 3 星破铁墙+割草！');
+        } else if (type === 'boat') {
+          p.hasBoat = true;
+          showToast('⛵ 两栖气垫船！可自由渡河并抵挡 1 次致命炮弹！');
+        } else if (type === 'minepack') {
+          p.mines = Math.min(6, p.mines + 3);
+          showToast('✴️ 补充 3 颗遥控防坦地雷！');
+        } else if (type === 'wallbuilder') {
+          const fc = Math.floor((p.x + 16 + DIR_DX[p.dir] * 32) / TILE_PX);
+          const fr = Math.floor((p.y + 16 + DIR_DY[p.dir] * 32) / TILE_PX);
+          for (let dr = 0; dr < 2; dr++) {
+            for (let dc = 0; dc < 2; dc++) {
+              const rr = fr + dr, cc = fc + dc;
+              if (rr >= 0 && rr < GRID_H && cc >= 0 && cc < GRID_W && map[rr][cc] === T_EMPTY) {
+                map[rr][cc] = T_STEEL;
+              }
+            }
+          }
+          buildBaseWall(map, T_STEEL);
+          baseShovelTimer = 600;
+          showToast('🧱 工兵修墙包！前方生成铁墙掩体并加固老巢！');
+        } else if (type === 'beacon') {
+          allies.push({
+            x: (BASE_C - 3) * TILE_PX,
+            y: (BASE_R - 2) * TILE_PX,
+            dir: 0,
+            speed: 1.7,
+            life: 1200,
+            cooldown: 20
+          });
+          baseTurretTimer = 1200;
+          showToast('📡 友军信标！AI 蓝军坦克与护巢副炮已出击！');
+        } else if (type === 'grenade') {
+          showToast('💣 全屏手雷！引爆场上所有敌军！');
+          for (let i = enemies.length - 1; i >= 0; i--) {
+            damageEnemy(i, 99);
+          }
+        } else if (type === 'watch') {
+          freezeTimer = 600;
+          showToast('⏱ 定时怀表！敌军全体冻结 10 秒！');
+        } else if (type === 'shovel') {
+          buildBaseWall(map, T_STEEL);
+          baseShovelTimer = 720;
+          showToast('🛠 铁铲加固！老巢升级为防弹铁墙！');
+        } else if (type === 'shield') {
+          p.shieldTimer = 720;
+          showToast('🛡 无敌护盾激活 12 秒！');
+        } else if (type === '1up') {
+          p.lives++;
+          showToast('💚 奖励 1 条生命！');
+        }
+        updateHUD();
+      }
+
+      function damageEnemy(idx, dmg) {
+        const e = enemies[idx];
+        if (!e) return;
+        e.hp -= dmg;
+        e.revealTimer = 60;
+        if (e.hp <= 0) {
+          SFX.explode();
+          spawnExplosion(e.x + e.size / 2, e.y + e.size / 2, e.color, e.type === 'boss' ? 36 : 16);
+          score += e.type === 'boss' ? 3000 : 200;
+          if (e.isDropper) {
+            spawnRandomPowerup();
+          }
+          if (e.type === 'splitter') {
+            enemies.push(createEnemy('mini', e.x, e.y, false));
+            enemies.push(createEnemy('mini', Math.min(CANVAS_W - 32, e.x + 16), e.y, false));
+          }
+          if (e.type === 'boss') {
+            document.getElementById('bossHpBarWrap').classList.add('hidden');
+            showToast('🎉 巨型守关 BOSS 已被击毁！');
+          }
+          enemies.splice(idx, 1);
+          updateHUD();
+        } else {
+          SFX.hitArmor();
+          if (e.type === 'boss') {
+            document.getElementById('bossHpFill').style.width = `${Math.max(0, (e.hp / e.maxHp) * 100)}%`;
+          }
+        }
+      }
+
+      function damagePlayer(p) {
+        if (!p || p.shieldTimer > 0 || p.lives <= 0) return;
+        if (p.hasBoat) {
+          p.hasBoat = false;
+          p.shieldTimer = 90;
+          SFX.hitArmor();
+          showToast('⛵ 气垫船抵挡了一次致命炮击！');
+          updateHUD();
+          return;
+        }
+        SFX.explode();
+        spawnExplosion(p.x + 16, p.y + 16, '#f8d830', 20);
+        p.lives--;
+        p.stars = 0;
+        p.weaponIdx = 0;
+        deathsInStage++;
+        if (p.lives > 0) {
+          p.x = (p.id === 1 ? BASE_C - 4 : BASE_C + 4) * TILE_PX;
+          p.y = BASE_R * TILE_PX;
+          p.dir = 0;
+          p.shieldTimer = 180;
+        }
+        updateHUD();
+      }
+
+      /* ================= MAIN SIMULATION UPDATE ================= */
+      function updateGame() {
+        if (paused || gameOver || stageCleared) return;
+        tickCount++;
+        stageTimeTicks++;
+
+        if (freezeTimer > 0) freezeTimer--;
+        if (baseShovelTimer > 0) {
+          baseShovelTimer--;
+          if (baseShovelTimer === 0) buildBaseWall(map, T_BRICK);
+        }
+        if (baseTurretTimer > 0) baseTurretTimer--;
+
+        if (enemiesRemainingToSpawn > 0 && enemies.length < 7) {
+          spawnTimer--;
+          if (spawnTimer <= 0) {
+            const spawnCols = [0, 10, 20, 30, 40];
+            const sc = spawnCols[spawnSlotIdx % spawnCols.length];
+            spawnSlotIdx++;
+            const isBossStage = (currentStageIdx + 1) % 10 === 0;
+            let etype = 'normal';
+            if (isBossStage && enemiesRemainingToSpawn === 1) {
+              etype = 'boss';
+            } else {
+              const pool = ['normal', 'fast', 'rapid', 'armor', 'amphibious', 'stealth', 'bulldozer', 'splitter'];
+              const maxIdx = Math.min(pool.length, 3 + Math.floor(currentStageIdx / 8));
+              etype = pool[Math.floor(Math.random() * maxIdx)];
+            }
+            const isDrop = (enemiesRemainingToSpawn % 4 === 0);
+            const ne = createEnemy(etype, sc * TILE_PX, 0, isDrop);
+            enemies.push(ne);
+            enemiesRemainingToSpawn--;
+            spawnTimer = 75;
+            if (etype === 'boss') {
+              document.getElementById('bossHpBarWrap').classList.remove('hidden');
+              document.getElementById('bossHpFill').style.width = '100%';
+              showToast('⚠️ 警告！巨型守关 BOSS 登场！');
+            }
+            updateHUD();
+          }
+        }
+
+        players.forEach((p, pIdx) => {
+          if (p.lives <= 0) return;
+          if (p.shieldTimer > 0) p.shieldTimer--;
+          if (p.cooldown > 0) p.cooldown--;
+
+          let moveDir = -1;
+          if (pIdx === 0) {
+            if (dpadDir !== -1) moveDir = dpadDir;
+            else if (keysDown['KeyW'] || keysDown['ArrowUp']) moveDir = 0;
+            else if (keysDown['KeyD'] || keysDown['ArrowRight']) moveDir = 1;
+            else if (keysDown['KeyS'] || keysDown['ArrowDown']) moveDir = 2;
+            else if (keysDown['KeyA'] || keysDown['ArrowLeft']) moveDir = 3;
+
+            try {
+              const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+              const gp = gps && gps[0];
+              if (gp) {
+                if (gp.axes[1] < -0.4 || (gp.buttons[12] && gp.buttons[12].pressed)) moveDir = 0;
+                else if (gp.axes[0] > 0.4 || (gp.buttons[15] && gp.buttons[15].pressed)) moveDir = 1;
+                else if (gp.axes[1] > 0.4 || (gp.buttons[13] && gp.buttons[13].pressed)) moveDir = 2;
+                else if (gp.axes[0] < -0.4 || (gp.buttons[14] && gp.buttons[14].pressed)) moveDir = 3;
+                if (gp.buttons[0] && gp.buttons[0].pressed) firePlayerWeapon(p, 'single');
+                if (gp.buttons[1] && gp.buttons[1].pressed) firePlayerWeapon(p, 'rapid');
+              }
+            } catch (e) {}
+
+            if (fireAPressed || keysDown['Space'] || keysDown['KeyJ']) firePlayerWeapon(p, 'single');
+            if (fireBPressed || keysDown['KeyK']) firePlayerWeapon(p, 'rapid');
+          } else {
+            if (keysDown['KeyI']) moveDir = 0;
+            else if (keysDown['KeyL']) moveDir = 1;
+            else if (keysDown['KeyK']) moveDir = 2;
+            else if (keysDown['KeyJ']) moveDir = 3;
+            if (keysDown['Enter']) firePlayerWeapon(p, 'single');
+          }
+
+          if (moveDir !== -1) {
+            if (p.dir !== moveDir) {
+              if (moveDir === 0 || moveDir === 2) {
+                const snapX = Math.round(p.x / 16) * 16;
+                if (Math.abs(snapX - p.x) <= 7) p.x = snapX;
+              } else {
+                const snapY = Math.round(p.y / 16) * 16;
+                if (Math.abs(snapY - p.y) <= 7) p.y = snapY;
+              }
+            }
+            p.dir = moveDir;
+            const terrMul = getTerrainSpeedFactor(p.x, p.y, 32);
+            const spd = p.speed * terrMul * Math.min(1.4, 0.8 + saveState.sensitivity * 0.2);
+            const nx = p.x + DIR_DX[moveDir] * spd;
+            const ny = p.y + DIR_DY[moveDir] * spd;
+            if (canTankMoveTo(nx, ny, 32, true, p.hasBoat)) {
+              p.x = nx;
+              p.y = ny;
+              checkPortalWarp(p, 32);
+            }
+          }
+
+          for (let i = powerups.length - 1; i >= 0; i--) {
+            const pu = powerups[i];
+            if (Math.abs(p.x - pu.x) < 28 && Math.abs(p.y - pu.y) < 28) {
+              applyPowerup(p, pu.type);
+              powerups.splice(i, 1);
+            }
+          }
+        });
+
+        for (let i = allies.length - 1; i >= 0; i--) {
+          const al = allies[i];
+          al.life--;
+          if (al.life <= 0) {
+            allies.splice(i, 1);
+            continue;
+          }
+          if (al.cooldown > 0) al.cooldown--;
+          const nx = al.x + DIR_DX[al.dir] * al.speed;
+          const ny = al.y + DIR_DY[al.dir] * al.speed;
+          if (canTankMoveTo(nx, ny, 32, true, true) && Math.random() > 0.02) {
+            al.x = nx;
+            al.y = ny;
+            checkPortalWarp(al, 32);
+          } else {
+            al.dir = Math.floor(Math.random() * 4);
+          }
+          if (al.cooldown <= 0) {
+            al.cooldown = 36;
+            bullets.push({
+              x: al.x + 16 + DIR_DX[al.dir] * 16,
+              y: al.y + 16 + DIR_DY[al.dir] * 16,
+              dir: al.dir,
+              speed: 5.0,
+              owner: 'ally',
+              kind: 'standard',
+              life: 120,
+              power: 2,
+              canBreakSteel: true,
+              canCutGrass: true
+            });
+          }
+        }
+
+        if (baseTurretTimer > 0 && tickCount % 48 === 0) {
+          const leftTurret = { x: (BASE_C - 2) * TILE_PX + 8, y: BASE_R * TILE_PX + 8 };
+          const rightTurret = { x: (BASE_C + 3) * TILE_PX + 8, y: BASE_R * TILE_PX + 8 };
+          [leftTurret, rightTurret].forEach((gt, idx) => {
+            const fireDir = idx === 0 ? (tickCount % 96 === 0 ? 0 : 3) : (tickCount % 96 === 0 ? 0 : 1);
+            bullets.push({
+              x: gt.x, y: gt.y, dir: fireDir,
+              speed: 5.5, owner: 'ally', kind: 'standard', life: 100, power: 2,
+              canBreakSteel: true,
+              canCutGrass: true
+            });
+          });
+        }
+
+        if (tickCount % 75 === 0 && freezeTimer <= 0) {
+          for (let r = 0; r < GRID_H; r++) {
+            for (let c = 0; c < GRID_W; c++) {
+              if (map[r][c] === T_TURRET_N || map[r][c] === T_TURRET_A) {
+                const isAllyT = map[r][c] === T_TURRET_A;
+                const safeDirs = (c >= 18 && c <= 23) ? [0, 1, 3] : [0, 1, 2, 3];
+                const tDir = safeDirs[Math.floor(tickCount / 75) % safeDirs.length];
+                bullets.push({
+                  x: c * TILE_PX + 8 + DIR_DX[tDir] * 12,
+                  y: r * TILE_PX + 8 + DIR_DY[tDir] * 12,
+                  dir: tDir,
+                  speed: 4.5,
+                  owner: isAllyT ? 'ally' : 'turret_neutral',
+                  isTurretBullet: true,
+                  kind: 'standard',
+                  life: 110,
+                  power: 1
+                });
+              }
+            }
+          }
+        }
+
+        if (freezeTimer <= 0) {
+          enemies.forEach(e => {
+            if (e.revealTimer > 0) e.revealTimer--;
+            if (e.cooldown > 0) e.cooldown--;
+            e.aiTurnTimer--;
+
+            const terrMul = getTerrainSpeedFactor(e.x, e.y, e.size);
+            const spd = e.speed * terrMul;
+            const nx = e.x + DIR_DX[e.dir] * spd;
+            const ny = e.y + DIR_DY[e.dir] * spd;
+
+            if (e.type === 'bulldozer') {
+              const fc = Math.floor((nx + e.size / 2 + DIR_DX[e.dir] * 16) / TILE_PX);
+              const fr = Math.floor((ny + e.size / 2 + DIR_DY[e.dir] * 16) / TILE_PX);
+              if (fr >= 0 && fr < GRID_H && fc >= 0 && fc < GRID_W) {
+                if (map[fr][fc] === T_BRICK || map[fr][fc] === T_FOREST) {
+                  map[fr][fc] = T_EMPTY;
+                  brickMask[fr][fc] = FULL_BRICK_MASK;
+                }
+              }
+            }
+
+            const canCrossWater = e.type === 'amphibious' || e.type === 'boss';
+            if (canTankMoveTo(nx, ny, e.size, false, canCrossWater) && e.aiTurnTimer > 0) {
+              e.x = nx;
+              e.y = ny;
+              checkPortalWarp(e, e.size);
+            } else {
+              const choices = [2, 2, 1, 3, 0];
+              e.dir = choices[Math.floor(Math.random() * choices.length)];
+              e.aiTurnTimer = 35 + Math.floor(Math.random() * 55);
+            }
+
+            if (e.cooldown <= 0) {
+              e.cooldown = e.type === 'rapid' ? 28 : 55;
+              const enemyPower = e.type === 'bulldozer' || e.type === 'boss' ? 2 : 1;
+              const enemyBreakSteel = enemyPower >= 2;
+              bullets.push({
+                x: e.x + e.size / 2 + DIR_DX[e.dir] * (e.size / 2),
+                y: e.y + e.size / 2 + DIR_DY[e.dir] * (e.size / 2),
+                dir: e.dir,
+                speed: e.type === 'rapid' ? 5.2 : 4.0,
+                owner: 'enemy',
+                kind: 'standard',
+                life: 140,
+                power: enemyPower,
+                canBreakSteel: enemyBreakSteel,
+                canCutGrass: enemyBreakSteel
+              });
+            }
+
+            for (let mIdx = mines.length - 1; mIdx >= 0; mIdx--) {
+              const m = mines[mIdx];
+              if (m.armTimer > 0) { m.armTimer--; continue; }
+              if (m.x >= e.x && m.x <= e.x + e.size && m.y >= e.y && m.y <= e.y + e.size) {
+                mines.splice(mIdx, 1);
+                SFX.explode();
+                spawnExplosion(m.x, m.y, '#ef4444', 22);
+                const eIdx = enemies.indexOf(e);
+                if (eIdx !== -1) damageEnemy(eIdx, 5);
+                break;
+              }
+            }
+          });
+        }
+
+        for (let i = bullets.length - 1; i >= 0; i--) {
+          const b = bullets[i];
+          const canBreakSteel = Boolean(b.canBreakSteel || (b.power >= 2 && b.owner !== 'turret_neutral'));
+          const canCutGrass = Boolean(b.canCutGrass || canBreakSteel || b.kind === 'flame' || b.kind === 'mortar');
+
+          b.life--;
+          if (b.life <= 0) {
+            if (b.kind === 'mortar') {
+              SFX.explode();
+              spawnExplosion(b.x, b.y, '#f59e0b', 22);
+              const mc = Math.floor(b.x / TILE_PX);
+              const mr = Math.floor(b.y / TILE_PX);
+              for (let rr = mr - 1; rr <= mr + 1; rr++) {
+                for (let cc = mc - 1; cc <= mc + 1; cc++) {
+                  if (rr < 0 || rr >= GRID_H || cc < 0 || cc >= GRID_W) continue;
+                  const mt = map[rr][cc];
+                  if (mt === T_BRICK || (mt === T_STEEL && canBreakSteel) || (mt === T_FOREST && canCutGrass)) {
+                    map[rr][cc] = T_EMPTY;
+                    brickMask[rr][cc] = FULL_BRICK_MASK;
+                  }
+                }
+              }
+              for (let ei = enemies.length - 1; ei >= 0; ei--) {
+                const e = enemies[ei];
+                if (Math.hypot((e.x + e.size / 2) - b.x, (e.y + e.size / 2) - b.y) < 48) {
+                  damageEnemy(ei, 3);
+                }
+              }
+            }
+            bullets.splice(i, 1);
+            continue;
+          }
+
+          b.x += DIR_DX[b.dir] * b.speed;
+          b.y += DIR_DY[b.dir] * b.speed;
+
+          if (b.x < 0 || b.x >= CANVAS_W || b.y < 0 || b.y >= CANVAS_H) {
+            if (b.kind === 'ricochet' && b.bounces > 0) {
+              b.bounces--;
+              b.dir = (b.dir + 1) % 4;
+              b.x = Math.max(4, Math.min(CANVAS_W - 4, b.x));
+              b.y = Math.max(4, Math.min(CANVAS_H - 4, b.y));
+              continue;
+            }
+            bullets.splice(i, 1);
+            continue;
+          }
+
+          if (b.kind === 'mortar') continue;
+
+          // Dual-brick-width impact detection (7.5px perpendicular half-span across 32px tank axis)
+          const halfSpan = 7.5;
+          const samplePoints = (b.dir === 0 || b.dir === 2)
+            ? [
+                { sx: Math.max(0, Math.min(CANVAS_W - 1, b.x - halfSpan)), sy: b.y },
+                { sx: Math.max(0, Math.min(CANVAS_W - 1, b.x + halfSpan)), sy: b.y }
+              ]
+            : [
+                { sx: b.x, sy: Math.max(0, Math.min(CANVAS_H - 1, b.y - halfSpan)) },
+                { sx: b.x, sy: Math.max(0, Math.min(CANVAS_H - 1, b.y + halfSpan)) }
+              ];
+
+          const hitCells = [];
+          for (let sIdx = 0; sIdx < samplePoints.length; sIdx++) {
+            const sc = Math.floor(samplePoints[sIdx].sx / TILE_PX);
+            const sr = Math.floor(samplePoints[sIdx].sy / TILE_PX);
+            if (!hitCells.some(cell => cell.r === sr && cell.c === sc)) {
+              hitCells.push({ r: sr, c: sc });
+            }
+          }
+
+          let stopBullet = false;
+          let triggerRicochet = false;
+
+          for (let hIdx = 0; hIdx < hitCells.length; hIdx++) {
+            const { r, c } = hitCells[hIdx];
+            const t = map[r][c];
+
+            if (t === T_PORTAL_A || t === T_PORTAL_B) {
+              if (!b.warped) {
+                const targetT = t === T_PORTAL_A ? T_PORTAL_B : T_PORTAL_A;
+                for (let pr = 0; pr < GRID_H; pr++) {
+                  for (let pc = 0; pc < GRID_W; pc++) {
+                    if (map[pr][pc] === targetT) {
+                      b.x = pc * TILE_PX + 8;
+                      b.y = pr * TILE_PX + 8;
+                      b.warped = true;
+                      break;
+                    }
+                  }
+                }
+              }
+            } else if (t === T_ONEWAY && b.owner === 'enemy') {
+              spawnExplosion(b.x, b.y, '#38bdf8', 6);
+              stopBullet = true;
+            } else if (t === T_BARREL) {
+              triggerBarrelExplosion(c, r);
+              stopBullet = true;
+            } else if (t === T_TURRET_N || t === T_TURRET_A) {
+              if ((b.owner === 'player' || b.owner === 'ally') && t === T_TURRET_N) {
+                map[r][c] = T_TURRET_A;
+                SFX.powerup();
+                showToast('🗼 中立机枪塔已策反为绿色友军炮台！');
+              }
+              if (!b.isTurretBullet) {
+                stopBullet = true;
+              }
+            } else if (t === T_BRICK) {
+              damageBrickTile(r, c, b.dir, b.power);
+              if (b.kind !== 'flame') {
+                spawnExplosion(c * TILE_PX + 8, r * TILE_PX + 8, '#e86a42', 6);
+                stopBullet = true;
+              }
+            } else if (t === T_FOREST && canCutGrass) {
+              map[r][c] = T_EMPTY;
+              brickMask[r][c] = FULL_BRICK_MASK;
+              spawnExplosion(c * TILE_PX + 8, r * TILE_PX + 8, '#58d838', 4);
+            } else if (t === T_STEEL) {
+              if (canBreakSteel) {
+                map[r][c] = T_EMPTY;
+                brickMask[r][c] = FULL_BRICK_MASK;
+                spawnExplosion(c * TILE_PX + 8, r * TILE_PX + 8, '#bcbcbc', 8);
+                stopBullet = true;
+              } else if (b.kind === 'ricochet' && b.bounces > 0) {
+                triggerRicochet = true;
+              } else {
+                SFX.hitArmor();
+                spawnExplosion(c * TILE_PX + 8, r * TILE_PX + 8, '#989898', 5);
+                stopBullet = true;
+              }
+            } else if (t === T_EAGLE) {
+              if (b.owner === 'player' || b.owner === 'ally' || b.isTurretBullet) {
+                stopBullet = true;
+              } else {
+                baseAlive = false;
+                gameOver = true;
+                SFX.lose();
+                spawnExplosion(b.x, b.y, '#ef4444', 35);
+                stopBullet = true;
+                showToast('💥 司令部白头鹰已被摧毁！游戏结束');
+              }
+            }
+          }
+
+          if (triggerRicochet && !stopBullet) {
+            b.bounces--;
+            b.dir = (b.dir + 1) % 4;
+            continue;
+          }
+
+          if (stopBullet) {
+            bullets.splice(i, 1);
+            continue;
+          }
+
+          let hitOtherBullet = false;
+          for (let j = i - 1; j >= 0; j--) {
+            const b2 = bullets[j];
+            if (b.owner !== b2.owner && Math.hypot(b.x - b2.x, b.y - b2.y) < 10) {
+              bullets.splice(i, 1);
+              bullets.splice(j, 1);
+              i--;
+              hitOtherBullet = true;
+              break;
+            }
+          }
+          if (hitOtherBullet) continue;
+
+          if (b.owner === 'player' || b.owner === 'ally' || b.owner === 'turret_neutral') {
+            let hitE = false;
+            for (let ei = enemies.length - 1; ei >= 0; ei--) {
+              const e = enemies[ei];
+              if (b.x >= e.x && b.x <= e.x + e.size && b.y >= e.y && b.y <= e.y + e.size) {
+                damageEnemy(ei, b.power);
+                hitE = true;
+                break;
+              }
+            }
+            if (hitE) {
+              bullets.splice(i, 1);
+              continue;
+            }
+          }
+
+          if (b.owner === 'enemy') {
+            let hitP = false;
+            players.forEach(p => {
+              if (p.lives > 0 && b.x >= p.x && b.x <= p.x + 32 && b.y >= p.y && b.y <= p.y + 32) {
+                damagePlayer(p);
+                hitP = true;
+              }
+            });
+            if (hitP) {
+              bullets.splice(i, 1);
+              continue;
+            }
+          }
+        }
+
+        for (let i = powerups.length - 1; i >= 0; i--) {
+          powerups[i].timer--;
+          if (powerups[i].timer <= 0) powerups.splice(i, 1);
+        }
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const pt = particles[i];
+          pt.x += pt.vx;
+          pt.y += pt.vy;
+          pt.life--;
+          if (pt.life <= 0) particles.splice(i, 1);
+        }
+        for (let i = lasers.length - 1; i >= 0; i--) {
+          lasers[i].life--;
+          if (lasers[i].life <= 0) lasers.splice(i, 1);
+        }
+
+        if (players.every(p => p.lives <= 0)) {
+          gameOver = true;
+          SFX.lose();
+          showToast('💀 我方坦克全灭！点击「重开」再次挑战');
+        }
+
+        if (!isEditorMode && enemiesRemainingToSpawn === 0 && enemies.length === 0 && baseAlive && !stageCleared) {
+          stageCleared = true;
+          SFX.win();
+          const earnedStars = deathsInStage === 0 ? 3 : (deathsInStage === 1 ? 2 : 1);
+          saveState.stars[currentStageIdx] = Math.max(saveState.stars[currentStageIdx] || 0, earnedStars);
+          if (score > saveState.highScore) saveState.highScore = score;
+          persistSave();
+          showToast(`🎉 过关成功！获得 ${'★'.repeat(earnedStars)} 评价，即将进入下一关...`);
+          setTimeout(() => {
+            if (stageCleared) {
+              const nextIdx = (currentStageIdx + 1) % 100;
+              startStage(nextIdx);
+            }
+          }, 2400);
+        }
+      }
+
+      /* ================= V3.4 AUTHENTIC PIXEL-ART RENDERER ================= */
+      function drawPixelBrick(px, py, mask) {
+        const quads = [
+          { bit: 1, ox: 0, oy: 0 },
+          { bit: 2, ox: 8, oy: 0 },
+          { bit: 4, ox: 0, oy: 8 },
+          { bit: 8, ox: 8, oy: 8 }
+        ];
+        for (let i = 0; i < 4; i++) {
+          const q = quads[i];
+          if (!(mask & q.bit)) continue;
+          const qx = px + q.ox;
+          const qy = py + q.oy;
+          ctx.fillStyle = '#5a1c08';
+          ctx.fillRect(qx, qy, 8, 8);
+          ctx.fillStyle = '#c84c0c';
+          ctx.fillRect(qx + (q.ox === 0 ? 0 : 1), qy, q.ox === 0 ? 7 : 7, 3);
+          ctx.fillStyle = '#e86a42';
+          ctx.fillRect(qx + (q.ox === 0 ? 0 : 1), qy, q.ox === 0 ? 7 : 7, 1);
+          ctx.fillStyle = '#c84c0c';
+          ctx.fillRect(qx, qy + 4, 3, 3);
+          ctx.fillRect(qx + 4, qy + 4, 4, 3);
+          ctx.fillStyle = '#e86a42';
+          ctx.fillRect(qx, qy + 4, 3, 1);
+          ctx.fillRect(qx + 4, qy + 4, 4, 1);
+          ctx.fillStyle = '#222222';
+          ctx.fillRect(qx, qy + 7, 8, 1);
+        }
+      }
+
+      function drawPixelSteel(px, py) {
+        ctx.fillStyle = '#686868';
+        ctx.fillRect(px, py, 16, 16);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(px, py, 15, 2);
+        ctx.fillRect(px, py, 2, 15);
+        ctx.fillStyle = '#bcbcbc';
+        ctx.fillRect(px + 2, py + 2, 12, 12);
+        ctx.fillStyle = '#989898';
+        ctx.fillRect(px + 4, py + 4, 8, 8);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(px + 5, py + 5, 6, 6);
+        ctx.fillStyle = '#444444';
+        ctx.fillRect(px + 2, py + 2, 1, 1);
+        ctx.fillRect(px + 13, py + 2, 1, 1);
+        ctx.fillRect(px + 2, py + 13, 1, 1);
+        ctx.fillRect(px + 13, py + 13, 1, 1);
+      }
+
+      function drawPixelWater(px, py) {
+        const frame = Math.floor(tickCount / 18) % 2;
+        ctx.fillStyle = frame === 0 ? '#1838a8' : '#2048d0';
+        ctx.fillRect(px, py, 16, 16);
+        ctx.fillStyle = '#70b8ff';
+        if (frame === 0) {
+          ctx.fillRect(px + 2, py + 3, 5, 1);
+          ctx.fillRect(px + 10, py + 6, 4, 1);
+          ctx.fillRect(px + 1, py + 11, 6, 1);
+          ctx.fillRect(px + 9, py + 13, 5, 1);
+        } else {
+          ctx.fillRect(px + 4, py + 4, 5, 1);
+          ctx.fillRect(px + 11, py + 7, 4, 1);
+          ctx.fillRect(px + 3, py + 11, 5, 1);
+          ctx.fillRect(px + 7, py + 14, 6, 1);
+        }
+        ctx.fillStyle = '#d8f0ff';
+        ctx.fillRect(px + (frame ? 5 : 3), py + (frame ? 4 : 3), 2, 1);
+        ctx.fillRect(px + (frame ? 8 : 10), py + (frame ? 14 : 13), 2, 1);
+      }
+
+      function drawPixelForest(px, py) {
+        ctx.fillStyle = '#085808';
+        ctx.fillRect(px + 1, py + 2, 14, 12);
+        ctx.fillRect(px + 2, py + 1, 12, 14);
+        ctx.fillStyle = '#189818';
+        ctx.fillRect(px + 2, py + 2, 5, 5);
+        ctx.fillRect(px + 9, py + 2, 5, 5);
+        ctx.fillRect(px + 2, py + 9, 5, 5);
+        ctx.fillRect(px + 9, py + 9, 5, 5);
+        ctx.fillRect(px + 5, py + 5, 6, 6);
+        ctx.fillStyle = '#58d838';
+        ctx.fillRect(px + 3, py + 3, 2, 2);
+        ctx.fillRect(px + 10, py + 3, 2, 2);
+        ctx.fillRect(px + 6, py + 6, 3, 2);
+        ctx.fillRect(px + 3, py + 10, 2, 2);
+        ctx.fillRect(px + 10, py + 10, 2, 2);
+      }
+
+      function drawPixelIce(px, py) {
+        ctx.fillStyle = '#a8e0f8';
+        ctx.fillRect(px, py, 16, 16);
+        ctx.fillStyle = '#70b8ff';
+        ctx.fillRect(px, py + 15, 16, 1);
+        ctx.fillRect(px + 15, py, 1, 16);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(px + 2, py + 4, 2, 1);
+        ctx.fillRect(px + 4, py + 2, 2, 1);
+        ctx.fillRect(px + 9, py + 11, 2, 1);
+        ctx.fillRect(px + 11, py + 9, 2, 1);
+      }
+
+      function drawPixelMud(px, py) {
+        ctx.fillStyle = '#4a2e16';
+        ctx.fillRect(px, py, 16, 16);
+        ctx.fillStyle = '#6b4423';
+        ctx.fillRect(px + 2, py + 3, 4, 2);
+        ctx.fillRect(px + 10, py + 6, 4, 2);
+        ctx.fillRect(px + 4, py + 11, 5, 2);
+        ctx.fillStyle = '#2e1a0b';
+        ctx.fillRect(px + 7, py + 2, 2, 2);
+        ctx.fillRect(px + 2, py + 8, 2, 2);
+        ctx.fillRect(px + 11, py + 13, 3, 2);
+      }
+
+      function drawPixelBarrel(px, py) {
+        ctx.fillStyle = '#2e1a0b';
+        ctx.fillRect(px + 3, py + 1, 10, 14);
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(px + 4, py + 2, 8, 12);
+        ctx.fillStyle = '#facc15';
+        ctx.fillRect(px + 4, py + 6, 8, 4);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(px + 5, py + 2, 1, 12);
+        ctx.fillStyle = '#bcbcbc';
+        ctx.fillRect(px + 3, py + 2, 10, 1);
+        ctx.fillRect(px + 3, py + 13, 10, 1);
+      }
+
+      function drawPixelPortal(px, py, isBlue) {
+        const phase = Math.floor(tickCount / 8) % 3;
+        const cOuter = isBlue ? '#1838a8' : '#c84c0c';
+        const cMid = isBlue ? '#38bdf8' : '#fb923c';
+        ctx.fillStyle = cOuter;
+        ctx.fillRect(px + 2, py + 2, 12, 12);
+        ctx.fillStyle = cMid;
+        ctx.fillRect(px + 4, py + 4, 8, 8);
+        ctx.fillStyle = '#ffffff';
+        const off = phase === 1 ? 1 : 0;
+        ctx.fillRect(px + 6 + off, py + 6, 4 - off, 4);
+      }
+
+      function drawPixelOneway(px, py) {
+        const blink = Math.floor(tickCount / 10) % 2;
+        ctx.fillStyle = '#062c38';
+        ctx.fillRect(px, py, 16, 16);
+        ctx.fillStyle = blink ? '#38bdf8' : '#10b981';
+        ctx.fillRect(px, py + 2, 16, 2);
+        ctx.fillRect(px, py + 7, 16, 2);
+        ctx.fillRect(px, py + 12, 16, 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(px + 7, py + 4, 2, 2);
+        ctx.fillRect(px + 5, py + 6, 2, 2);
+        ctx.fillRect(px + 9, py + 6, 2, 2);
+      }
+
+      function drawPixelTurret(px, py, isAlly) {
+        ctx.fillStyle = '#686868';
+        ctx.fillRect(px + 2, py + 2, 12, 12);
+        ctx.fillStyle = '#bcbcbc';
+        ctx.fillRect(px + 3, py + 3, 10, 10);
+        ctx.fillStyle = isAlly ? '#10b981' : '#f97316';
+        ctx.fillRect(px + 5, py + 5, 6, 6);
+        ctx.fillStyle = isAlly ? '#38bdf8' : '#ef4444';
+        ctx.fillRect(px + 6, py + 6, 4, 4);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(px + 7, py + 1, 2, 6);
+      }
+
+      function drawPixelEagleBase(bx, by, alive) {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(bx, by, 32, 32);
+
+        if (!alive) {
+          ctx.fillStyle = '#686868';
+          ctx.fillRect(bx + 6, by + 18, 20, 10);
+          ctx.fillRect(bx + 10, by + 12, 12, 6);
+          ctx.fillStyle = '#2e1a0b';
+          ctx.fillRect(bx + 12, by + 16, 4, 8);
+          ctx.fillRect(bx + 18, by + 14, 3, 10);
+          return;
+        }
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(bx + 14, by + 3, 5, 5);
+        ctx.fillStyle = '#f8d830';
+        ctx.fillRect(bx + 11, by + 5, 3, 2);
+        ctx.fillStyle = '#e83838';
+        ctx.fillRect(bx + 15, by + 5, 1, 1);
+
+        ctx.fillStyle = '#bcbcbc';
+        ctx.fillRect(bx + 3, by + 8, 26, 4);
+        ctx.fillRect(bx + 5, by + 12, 22, 4);
+        ctx.fillRect(bx + 7, by + 16, 18, 3);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(bx + 4, by + 9, 8, 2);
+        ctx.fillRect(bx + 20, by + 9, 8, 2);
+        ctx.fillRect(bx + 6, by + 13, 6, 2);
+        ctx.fillRect(bx + 20, by + 13, 6, 2);
+
+        ctx.fillStyle = '#f8d830';
+        ctx.fillRect(bx + 12, by + 10, 8, 11);
+        ctx.fillStyle = '#e83838';
+        ctx.fillRect(bx + 14, by + 12, 4, 7);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(bx + 10, by + 22, 4, 4);
+        ctx.fillRect(bx + 18, by + 22, 4, 4);
+        ctx.fillRect(bx + 8, by + 26, 16, 3);
+      }
+
+      function getEnemyArmorTint(e) {
+        if (e.isDropper && (Math.floor(tickCount / 6) % 2 === 0)) return '#e83838';
+        if (e.type === 'armor') {
+          if (e.hp >= 4) return '#38b838';
+          if (e.hp === 3) return '#e8c828';
+          if (e.hp === 2) return '#e83838';
+          return '#f8f8f8';
+        }
+        return e.color;
+      }
+
+      function drawTank(x, y, size, dir, bodyColor, turretColor, hasShield = false, hasBoat = false, alpha = 1.0, stars = 0, subType = 'normal') {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        const ix = Math.round(x);
+        const iy = Math.round(y);
+        const cx = ix + Math.floor(size / 2);
+        const cy = iy + Math.floor(size / 2);
+        ctx.translate(cx, cy);
+        ctx.rotate((dir * Math.PI) / 2);
+
+        const treadAnim = Math.floor(tickCount / 4) % 2;
+
+        if (size === 64) {
+          ctx.fillStyle = '#686868';
+          ctx.fillRect(-28, -28, 10, 56);
+          ctx.fillRect(18, -28, 10, 56);
+          ctx.fillStyle = '#bcbcbc';
+          for (let ty = -26 + treadAnim * 4; ty < 26; ty += 8) {
+            ctx.fillRect(-28, ty, 10, 3);
+            ctx.fillRect(18, ty, 10, 3);
+          }
+          ctx.fillStyle = '#7c0800';
+          ctx.fillRect(-18, -24, 36, 48);
+          ctx.fillStyle = bodyColor;
+          ctx.fillRect(-16, -22, 32, 44);
+          ctx.fillStyle = '#f8d830';
+          ctx.fillRect(-14, -18, 28, 6);
+          ctx.fillRect(-14, 12, 28, 6);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-9, -32, 4, 20);
+          ctx.fillRect(5, -32, 4, 20);
+          ctx.fillStyle = '#f8d830';
+          ctx.fillRect(-10, -32, 6, 3);
+          ctx.fillRect(4, -32, 6, 3);
+          ctx.fillStyle = '#380000';
+          ctx.fillRect(-12, -12, 24, 24);
+          ctx.fillStyle = '#fc7460';
+          ctx.fillRect(-10, -10, 20, 20);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-4, -4, 8, 8);
+        } else {
+          ctx.fillStyle = '#444444';
+          ctx.fillRect(-13, -13, 5, 26);
+          ctx.fillRect(8, -13, 5, 26);
+          ctx.fillStyle = '#bcbcbc';
+          for (let ty = -12 + treadAnim * 2; ty <= 11; ty += 4) {
+            ctx.fillRect(-13, ty, 5, 2);
+            ctx.fillRect(8, ty, 5, 2);
+          }
+
+          if (subType === 'bulldozer') {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(-14, -15, 28, 3);
+            ctx.fillRect(-13, -16, 3, 2);
+            ctx.fillRect(-5, -16, 3, 2);
+            ctx.fillRect(3, -16, 3, 2);
+            ctx.fillRect(10, -16, 3, 2);
+          }
+
+          ctx.fillStyle = bodyColor;
+          ctx.fillRect(-8, -11, 16, 22);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-8, -11, 14, 2);
+          ctx.fillRect(-8, -11, 2, 20);
+          ctx.fillStyle = '#222222';
+          ctx.fillRect(-6, 7, 12, 3);
+
+          const barrelLen = stars >= 1 ? 12 : 10;
+          const barrelW = stars >= 3 ? 4 : 2;
+          const barrelX = stars >= 3 ? -2 : -1;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(barrelX, -4 - barrelLen, barrelW, barrelLen);
+          if (stars >= 1) {
+            ctx.fillStyle = '#f8d830';
+            ctx.fillRect(-2, -4 - barrelLen, 4, 2);
+          }
+
+          ctx.fillStyle = turretColor;
+          ctx.fillRect(-5, -5, 10, 10);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-3, -3, 4, 4);
+        }
+
+        ctx.restore();
+
+        if (hasBoat) {
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(ix + 1, iy + 1, size - 2, size - 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(ix, iy, 3, 3);
+          ctx.fillRect(ix + size - 3, iy, 3, 3);
+          ctx.fillRect(ix, iy + size - 3, 3, 3);
+          ctx.fillRect(ix + size - 3, iy + size - 3, 3, 3);
+        }
+
+        if (hasShield) {
+          const sFrame = Math.floor(tickCount / 3) % 2;
+          ctx.strokeStyle = sFrame === 0 ? '#ffffff' : '#38bdf8';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(ix - 1, iy - 1, size + 2, size + 2);
+        }
+
+        if (subType === 'player' && stars > 0) {
+          ctx.fillStyle = '#fff090';
+          for (let s = 0; s < stars; s++) {
+            ctx.fillRect(ix + 4 + s * 6, iy + size - 4, 4, 3);
+          }
+        }
+      }
+
+      function renderGame() {
+        ctx.imageSmoothingEnabled = false;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+        for (let r = 0; r < GRID_H; r++) {
+          for (let c = 0; c < GRID_W; c++) {
+            const t = map[r][c];
+            if (t === T_EMPTY || t === T_FOREST || t === T_EAGLE) continue;
+            const px = c * TILE_PX;
+            const py = r * TILE_PX;
+            if (t === T_BRICK) drawPixelBrick(px, py, brickMask[r][c]);
+            else if (t === T_STEEL) drawPixelSteel(px, py);
+            else if (t === T_WATER) drawPixelWater(px, py);
+            else if (t === T_ICE) drawPixelIce(px, py);
+            else if (t === T_MUD) drawPixelMud(px, py);
+            else if (t === T_BARREL) drawPixelBarrel(px, py);
+            else if (t === T_PORTAL_A) drawPixelPortal(px, py, true);
+            else if (t === T_PORTAL_B) drawPixelPortal(px, py, false);
+            else if (t === T_ONEWAY) drawPixelOneway(px, py);
+            else if (t === T_TURRET_N) drawPixelTurret(px, py, false);
+            else if (t === T_TURRET_A) drawPixelTurret(px, py, true);
+          }
+        }
+
+        drawPixelEagleBase(BASE_C * TILE_PX, BASE_R * TILE_PX, baseAlive);
+
+        if (baseTurretTimer > 0) {
+          drawPixelTurret((BASE_C - 2) * TILE_PX, BASE_R * TILE_PX, true);
+          drawPixelTurret((BASE_C + 3) * TILE_PX, BASE_R * TILE_PX, true);
+        }
+
+        mines.forEach(m => {
+          const mx = Math.round(m.x);
+          const my = Math.round(m.y);
+          ctx.fillStyle = '#686868';
+          ctx.fillRect(mx - 5, my - 5, 10, 10);
+          ctx.fillStyle = (Math.floor(tickCount / 8) % 2 === 0) ? '#ef4444' : '#f8d830';
+          ctx.fillRect(mx - 2, my - 2, 4, 4);
+        });
+
+        players.forEach(p => {
+          if (p.lives <= 0) return;
+          const body = p.id === 1 ? '#f8d830' : '#38d848';
+          const turret = p.id === 1 ? '#c89010' : '#188828';
+          drawTank(p.x, p.y, 32, p.dir, body, turret, p.shieldTimer > 0, p.hasBoat, 1.0, p.stars, 'player');
+        });
+
+        allies.forEach(al => {
+          drawTank(al.x, al.y, 32, al.dir, '#38bdf8', '#1838a8', false, true, 1.0, 2, 'ally');
+        });
+
+        enemies.forEach(e => {
+          const bodyColor = getEnemyArmorTint(e);
+          const turretColor = (e.isDropper && Math.floor(tickCount / 6) % 2 === 0) ? '#ffffff' : '#444444';
+          const alpha = (e.type === 'stealth' && e.revealTimer <= 0) ? 0.28 : 1.0;
+          drawTank(e.x, e.y, e.size, e.dir, bodyColor, turretColor, false, e.type === 'amphibious', alpha, 1, e.type);
+
+          if (e.type === 'boss') {
+            const bx = Math.round(e.x);
+            const by = Math.max(2, Math.round(e.y) - 7);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(bx, by, 64, 5);
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(bx + 1, by + 1, Math.max(0, Math.floor((e.hp / e.maxHp) * 62)), 3);
+          }
+        });
+
+        for (let r = 0; r < GRID_H; r++) {
+          for (let c = 0; c < GRID_W; c++) {
+            if (map[r][c] === T_FOREST) {
+              drawPixelForest(c * TILE_PX, r * TILE_PX);
+            }
+          }
+        }
+
+        bullets.forEach(b => {
+          const bx = Math.round(b.x);
+          const by = Math.round(b.y);
+          const isVertical = (b.dir === 0 || b.dir === 2);
+          const isSteelPiercing = Boolean(b.canBreakSteel || (b.power >= 2 && b.owner !== 'turret_neutral'));
+
+          if (b.kind === 'flame') {
+            ctx.fillStyle = '#f97316';
+            ctx.fillRect(bx - 6, by - 6, 12, 12);
+            ctx.fillStyle = '#f8d830';
+            ctx.fillRect(bx - 4, by - 4, 8, 8);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(bx - 2, by - 2, 4, 4);
+          } else if (b.kind === 'mortar') {
+            ctx.fillStyle = '#f97316';
+            ctx.fillRect(bx - 5, by - 5, 10, 10);
+            ctx.fillStyle = '#f8d830';
+            ctx.fillRect(bx - 3, by - 3, 6, 6);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(bx - 2, by - 2, 4, 4);
+          } else {
+            // Classic high-visibility 12x6px directional pixel-art projectile
+            let outerColor = '#d97706';
+            let coreColor = '#facc15';
+            if (b.kind === 'ricochet') {
+              outerColor = '#7e22ce';
+              coreColor = '#e879f9';
+            } else if (isSteelPiercing) {
+              outerColor = '#0284c7';
+              coreColor = '#7dd3fc';
+            } else if (b.owner === 'enemy') {
+              outerColor = '#dc2626';
+              coreColor = '#fca5a5';
+            }
+
+            if (isVertical) {
+              // 6px wide x 12px tall
+              ctx.fillStyle = outerColor;
+              ctx.fillRect(bx - 3, by - 6, 6, 12);
+              ctx.fillStyle = coreColor;
+              ctx.fillRect(bx - 2, by - 4, 4, 9);
+              ctx.fillStyle = '#ffffff';
+              const tipY = b.dir === 0 ? by - 6 : by + 3;
+              ctx.fillRect(bx - 1, tipY, 2, 3);
+            } else {
+              // 12px wide x 6px tall
+              ctx.fillStyle = outerColor;
+              ctx.fillRect(bx - 6, by - 3, 12, 6);
+              ctx.fillStyle = coreColor;
+              ctx.fillRect(bx - 4, by - 2, 9, 4);
+              ctx.fillStyle = '#ffffff';
+              const tipX = b.dir === 3 ? bx - 6 : bx + 3;
+              ctx.fillRect(tipX, by - 1, 3, 2);
+            }
+          }
+        });
+
+        lasers.forEach(l => {
+          const x1 = Math.round(l.x1), y1 = Math.round(l.y1);
+          const x2 = Math.round(l.x2), y2 = Math.round(l.y2);
+          ctx.fillStyle = '#38bdf8';
+          ctx.fillRect(Math.min(x1, x2) - 3, Math.min(y1, y2) - 3, Math.abs(x2 - x1) + 6, Math.abs(y2 - y1) + 6);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(Math.min(x1, x2) - 1, Math.min(y1, y2) - 1, Math.abs(x2 - x1) + 2, Math.abs(y2 - y1) + 2);
+        });
+
+        const PU_ICON = {
+          star: '★', grenade: '💣', watch: '⏱', shovel: '🛠', shield: '🛡',
+          '1up': '💚', boat: '⛵', pistol: '🔫', minepack: '✴️', wallbuilder: '🧱', beacon: '📡'
+        };
+        powerups.forEach(pu => {
+          if (Math.floor(tickCount / 8) % 2 === 1 && pu.timer < 240) return;
+          const px = Math.round(pu.x);
+          const py = Math.round(pu.y);
+          const flash = Math.floor(tickCount / 10) % 2 === 0;
+          ctx.fillStyle = flash ? '#1838a8' : '#0a0a0d';
+          ctx.fillRect(px + 2, py + 2, 28, 28);
+          ctx.fillStyle = flash ? '#ffffff' : '#f8d830';
+          ctx.fillRect(px + 2, py + 2, 28, 2);
+          ctx.fillRect(px + 2, py + 2, 2, 28);
+          ctx.fillStyle = '#38bdf8';
+          ctx.fillRect(px + 2, py + 28, 28, 2);
+          ctx.fillRect(px + 28, py + 2, 2, 28);
+          ctx.font = '16px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(PU_ICON[pu.type] || '★', px + 16, py + 17);
+        });
+
+        particles.forEach(pt => {
+          const px = Math.round(pt.x);
+          const py = Math.round(pt.y);
+          if (pt.isBlastCore) {
+            const r = pt.life > 16 ? 8 : (pt.life > 8 ? 14 : 18);
+            ctx.fillStyle = '#e83838';
+            ctx.fillRect(px - r, py - r, r * 2, r * 2);
+            ctx.fillStyle = '#f8d830';
+            ctx.fillRect(px - Math.floor(r * 0.65), py - Math.floor(r * 0.65), Math.floor(r * 1.3), Math.floor(r * 1.3));
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(px - Math.floor(r * 0.3), py - Math.floor(r * 0.3), Math.floor(r * 0.6), Math.floor(r * 0.6));
+          } else {
+            ctx.fillStyle = pt.color;
+            ctx.fillRect(px - 2, py - 2, 4, 4);
+          }
+        });
+      }
+
+      /* ================= FIXED-STEP GAME LOOP (SPEED SCALED) ================= */
+      function loop(timestamp) {
+        if (!lastFrameTime) lastFrameTime = timestamp;
+        const speedMul = saveState.speed || 0.7;
+        const stepInterval = (1000 / 60) / speedMul;
+
+        if (timestamp - lastFrameTime >= stepInterval) {
+          lastFrameTime = timestamp;
+          if (!document.getElementById('battleScreen').classList.contains('hidden')) {
+            updateGame();
+            renderGame();
+          }
+        }
+        rafId = requestAnimationFrame(loop);
+      }
+
+      /* ================= RESPONSIVE CANVAS & CUSTOM CONTROL LAYOUT ================= */
+      function resizeCanvasDisplay() {
+        const wrapper = document.getElementById('arenaWrapper');
+        if (!wrapper) return;
+        const availW = wrapper.clientWidth - 10;
+        const availH = wrapper.clientHeight - 10;
+        if (availW <= 0 || availH <= 0) return;
+        const scale = Math.min(availW / CANVAS_W, availH / CANVAS_H);
+        const cssW = Math.floor(CANVAS_W * scale);
+        const cssH = Math.floor(CANVAS_H * scale);
+        canvas.style.width = `${cssW}px`;
+        canvas.style.height = `${cssH}px`;
+
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const targetW = Math.round(CANVAS_W * dpr);
+        const targetH = Math.round(CANVAS_H * dpr);
+        if (canvas.width !== targetW || canvas.height !== targetH) {
+          canvas.width = targetW;
+          canvas.height = targetH;
+        }
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.imageSmoothingEnabled = false;
+        applyControlLayoutPositions();
+      }
+
+      function applyControlLayoutPositions() {
+        const layer = document.getElementById('touchLayer');
+        if (!layer) return;
+        const lw = layer.clientWidth || 640;
+        const lh = layer.clientHeight || 360;
+
+        const groupEls = {
+          dpad: document.getElementById('dpadGroup'),
+          fire: document.getElementById('fireMainGroup'),
+          aux:  document.getElementById('actionClusterGroup')
+        };
+
+        document.documentElement.style.setProperty('--dpad-scale', (controlLayout.dpad.scale / 100).toFixed(2));
+        document.documentElement.style.setProperty('--fire-scale', (controlLayout.fire.scale / 100).toFixed(2));
+        document.documentElement.style.setProperty('--aux-scale',  (controlLayout.aux.scale / 100).toFixed(2));
+
+        document.documentElement.style.setProperty('--dpad-opacity', (controlLayout.dpad.opacity / 100).toFixed(2));
+        document.documentElement.style.setProperty('--fire-opacity', (controlLayout.fire.opacity / 100).toFixed(2));
+        document.documentElement.style.setProperty('--aux-opacity',  (controlLayout.aux.opacity / 100).toFixed(2));
+
+        ['dpad', 'fire', 'aux'].forEach(key => {
+          const el = groupEls[key];
+          const cfg = controlLayout[key];
+          if (!el) return;
+          const badge = document.getElementById(`badge-${key}`);
+          if (badge) {
+            const labelMap = { dpad: '方向键', fire: '开火键', aux: '功能键组' };
+            badge.textContent = `${labelMap[key]} ${cfg.scale}% · ${cfg.opacity}%`;
+          }
+          if (cfg.xPct !== null && cfg.yPct !== null) {
+            el.style.right = 'auto';
+            el.style.bottom = 'auto';
+            const rect = el.getBoundingClientRect();
+            const ew = rect.width || 96;
+            const eh = rect.height || 64;
+            const maxLeft = Math.max(4, lw - ew - 4);
+            const maxTop = Math.max(4, lh - eh - 4);
+            const px = Math.max(4, Math.min(maxLeft, (cfg.xPct / 100) * lw));
+            const py = Math.max(4, Math.min(maxTop, (cfg.yPct / 100) * lh));
+            el.style.left = `${Math.round(px)}px`;
+            el.style.top = `${Math.round(py)}px`;
+          } else {
+            el.style.left = '';
+            el.style.top = '';
+            el.style.right = '';
+            el.style.bottom = '';
+          }
+        });
+      }
+
+      function applySettingsUI() {
+        applyControlLayoutPositions();
+
+        const spdText = `🐢 速度: ${saveState.speed.toFixed(2).replace(/\.00$/, '.0')}x`;
+        document.getElementById('lobbySpeedBtn').textContent = spdText;
+        document.getElementById('battleSpeedBtn').textContent = `🐢 ${saveState.speed.toFixed(1)}x`;
+        const auxSpd = document.getElementById('auxSpeedBtn');
+        if (auxSpd) auxSpd.textContent = `🐢 ${saveState.speed.toFixed(1)}x`;
+
+        document.getElementById('speedSlider').value = saveState.speed;
+        document.getElementById('speedValText').textContent = saveState.speed.toFixed(2) + 'x';
+
+        document.getElementById('dpadSizeSlider').value = controlLayout.dpad.scale;
+        document.getElementById('dpadSizeValText').textContent = controlLayout.dpad.scale + '%';
+
+        document.getElementById('fireSizeSlider').value = controlLayout.fire.scale;
+        document.getElementById('fireSizeValText').textContent = controlLayout.fire.scale + '%';
+
+        document.getElementById('auxSizeSlider').value = controlLayout.aux.scale;
+        document.getElementById('auxSizeValText').textContent = controlLayout.aux.scale + '%';
+
+        const avgOp = Math.round((controlLayout.dpad.opacity + controlLayout.fire.opacity + controlLayout.aux.opacity) / 3);
+        document.getElementById('opacitySlider').value = avgOp;
+        document.getElementById('opacityValText').textContent = avgOp + '%';
+
+        document.getElementById('sensSlider').value = saveState.sensitivity;
+        document.getElementById('deadzoneSlider').value = saveState.deadzone;
+        document.getElementById('sensValText').textContent = `${saveState.sensitivity.toFixed(1)}x / ${saveState.deadzone}px`;
+
+        const sndBtn = document.getElementById('toggleSoundBtn');
+        if (sndBtn) {
+          sndBtn.textContent = saveState.soundOn !== false ? '🔊 音效: 开启' : '🔇 音效: 关闭';
+          sndBtn.className = saveState.soundOn !== false ? 'pill-btn green' : 'pill-btn';
+        }
+
+        const curCfg = controlLayout[selectedCtrlKey] || controlLayout.dpad;
+        document.getElementById('editBarScaleSlider').value = curCfg.scale;
+        document.getElementById('editBarScaleVal').textContent = curCfg.scale + '%';
+        document.getElementById('editBarOpacitySlider').value = curCfg.opacity;
+        document.getElementById('editBarOpacityVal').textContent = curCfg.opacity + '%';
+      }
+
+      function enterLayoutEditMode() {
+        document.getElementById('settingsModal').classList.add('hidden');
+        if (document.getElementById('battleScreen').classList.contains('hidden')) {
+          startStage(currentStageIdx);
+        }
+        layoutEditMode = true;
+        paused = true;
+        dpadDir = -1;
+        fireAPressed = false;
+        fireBPressed = false;
+        document.getElementById('touchLayer').classList.add('edit-mode');
+        document.getElementById('layoutEditorBar').classList.remove('hidden');
+        applySettingsUI();
+        showToast('🎛️ 拖动按键组到任意位置，点选可单独调大小与透明度');
+      }
+
+      function exitLayoutEditMode(saveChanges = true) {
+        layoutEditMode = false;
+        paused = false;
+        document.getElementById('touchLayer').classList.remove('edit-mode');
+        document.getElementById('layoutEditorBar').classList.add('hidden');
+        if (saveChanges) {
+          persistSave();
+          showToast('✅ 自定义按键位置与大小已保存！');
+        }
+      }
+
+      function resetControlLayout(resetSizesToo = false) {
+        ['dpad', 'fire', 'aux'].forEach(k => {
+          controlLayout[k].xPct = null;
+          controlLayout[k].yPct = null;
+          if (resetSizesToo) {
+            controlLayout[k].scale = 100;
+            controlLayout[k].opacity = 42;
+          }
+        });
+        persistSave();
+        applySettingsUI();
+        showToast(resetSizesToo ? '🔄 已恢复所有按键默认位置、大小与透明度' : '🔄 已恢复按键默认位置');
+      }
+
+      function cycleGlobalSpeed() {
+        const steps = [0.5, 0.7, 1.0, 1.3];
+        const curIdx = steps.findIndex(v => Math.abs(v - saveState.speed) < 0.06);
+        saveState.speed = steps[(curIdx + 1) % steps.length];
+        persistSave();
+        applySettingsUI();
+        showToast(`🐢 全局速度已切换为 ${saveState.speed.toFixed(1)}x`);
+      }
+
+      function renderGuideModal() {
+        const grid = document.getElementById('guideGrid');
+        grid.innerHTML = GUIDE_ITEMS.map(item => `
+          <div class="guide-item">
+            <div class="guide-icon">${item.icon}</div>
+            <div>
+              <div class="guide-title">${item.title}</div>
+              <div class="guide-desc">${item.desc}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      /* ================= TOUCH DRAG-TO-REPOSITION & D-PAD BINDINGS ================= */
+      function setupLayoutDragHandlers() {
+        const layer = document.getElementById('touchLayer');
+        const draggables = document.querySelectorAll('.ctrl-draggable');
+        let dragTarget = null;
+        let dragKey = null;
+        let startClientX = 0;
+        let startClientY = 0;
+        let startLeft = 0;
+        let startTop = 0;
+
+        function selectGroup(el) {
+          draggables.forEach(d => d.classList.remove('selected-ctrl'));
+          el.classList.add('selected-ctrl');
+          selectedCtrlKey = el.dataset.ctrlKey;
+          document.getElementById('selectedCtrlLabel').textContent = el.dataset.ctrlName || selectedCtrlKey;
+          applySettingsUI();
+        }
+
+        function onDragStart(el, clientX, clientY) {
+          if (!layoutEditMode) return;
+          selectGroup(el);
+          dragTarget = el;
+          dragKey = el.dataset.ctrlKey;
+          const layerRect = layer.getBoundingClientRect();
+          const elRect = el.getBoundingClientRect();
+          startClientX = clientX;
+          startClientY = clientY;
+          startLeft = elRect.left - layerRect.left;
+          startTop = elRect.top - layerRect.top;
+          el.style.right = 'auto';
+          el.style.bottom = 'auto';
+          el.style.left = `${Math.round(startLeft)}px`;
+          el.style.top = `${Math.round(startTop)}px`;
+        }
+
+        function onDragMove(clientX, clientY) {
+          if (!layoutEditMode || !dragTarget || !dragKey) return;
+          const layerRect = layer.getBoundingClientRect();
+          const elRect = dragTarget.getBoundingClientRect();
+          const maxLeft = Math.max(4, layerRect.width - elRect.width - 4);
+          const maxTop = Math.max(4, layerRect.height - elRect.height - 4);
+          const nextLeft = Math.max(4, Math.min(maxLeft, startLeft + (clientX - startClientX)));
+          const nextTop = Math.max(4, Math.min(maxTop, startTop + (clientY - startClientY)));
+          dragTarget.style.left = `${Math.round(nextLeft)}px`;
+          dragTarget.style.top = `${Math.round(nextTop)}px`;
+          controlLayout[dragKey].xPct = Number(((nextLeft / layerRect.width) * 100).toFixed(2));
+          controlLayout[dragKey].yPct = Number(((nextTop / layerRect.height) * 100).toFixed(2));
+        }
+
+        function onDragEnd() {
+          if (dragTarget) {
+            dragTarget = null;
+            dragKey = null;
+            persistSave();
+          }
+        }
+
+        draggables.forEach(el => {
+          el.addEventListener('touchstart', e => {
+            if (!layoutEditMode) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const t = e.changedTouches[0];
+            onDragStart(el, t.clientX, t.clientY);
+          }, { passive: false });
+
+          el.addEventListener('mousedown', e => {
+            if (!layoutEditMode) return;
+            e.preventDefault();
+            e.stopPropagation();
+            onDragStart(el, e.clientX, e.clientY);
+          });
+        });
+
+        window.addEventListener('touchmove', e => {
+          if (!layoutEditMode || !dragTarget) return;
+          e.preventDefault();
+          const t = e.changedTouches[0];
+          onDragMove(t.clientX, t.clientY);
+        }, { passive: false });
+
+        window.addEventListener('touchend', onDragEnd);
+        window.addEventListener('touchcancel', onDragEnd);
+        window.addEventListener('mousemove', e => onDragMove(e.clientX, e.clientY));
+        window.addEventListener('mouseup', onDragEnd);
+      }
+
+      function enableTouchDragScroll(el) {
+        if (!el) return;
+        let isDown = false;
+        let startY = 0;
+        let startScroll = 0;
+        el.addEventListener('mousedown', e => {
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+          isDown = true;
+          startY = e.clientY;
+          startScroll = el.scrollTop;
+        });
+        window.addEventListener('mousemove', e => {
+          if (!isDown) return;
+          el.scrollTop = startScroll - (e.clientY - startY);
+        });
+        window.addEventListener('mouseup', () => { isDown = false; });
+      }
+
+      function setupDpadTouch() {
+        const zone = document.getElementById('dpadGroup');
+        const btnEls = [
+          document.getElementById('dpadUp'),
+          document.getElementById('dpadRight'),
+          document.getElementById('dpadDown'),
+          document.getElementById('dpadLeft')
+        ];
+
+        function updateDpadFromPoint(clientX, clientY) {
+          if (layoutEditMode) return;
+          const rect = zone.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const dx = clientX - cx;
+          const dy = clientY - cy;
+          const dist = Math.hypot(dx, dy);
+
+          btnEls.forEach(b => b.classList.remove('active'));
+          if (dist < saveState.deadzone) {
+            dpadDir = -1;
+            return;
+          }
+          if (Math.abs(dx) > Math.abs(dy)) {
+            dpadDir = dx > 0 ? 1 : 3;
+          } else {
+            dpadDir = dy > 0 ? 2 : 0;
+          }
+          btnEls[dpadDir].classList.add('active');
+        }
+
+        function clearDpad() {
+          dpadDir = -1;
+          btnEls.forEach(b => b.classList.remove('active'));
+        }
+
+        zone.addEventListener('touchstart', e => {
+          if (layoutEditMode) return;
+          e.preventDefault();
+          const t = e.changedTouches[0];
+          updateDpadFromPoint(t.clientX, t.clientY);
+        }, { passive: false });
+
+        zone.addEventListener('touchmove', e => {
+          if (layoutEditMode) return;
+          e.preventDefault();
+          const t = e.changedTouches[0];
+          updateDpadFromPoint(t.clientX, t.clientY);
+        }, { passive: false });
+
+        zone.addEventListener('touchend', e => {
+          if (layoutEditMode) return;
+          e.preventDefault();
+          clearDpad();
+        }, { passive: false });
+
+        zone.addEventListener('touchcancel', clearDpad);
+
+        let mouseDpad = false;
+        zone.addEventListener('mousedown', e => {
+          if (layoutEditMode) return;
+          mouseDpad = true;
+          updateDpadFromPoint(e.clientX, e.clientY);
+        });
+        window.addEventListener('mousemove', e => {
+          if (mouseDpad && !layoutEditMode) updateDpadFromPoint(e.clientX, e.clientY);
+        });
+        window.addEventListener('mouseup', () => {
+          if (mouseDpad) { mouseDpad = false; clearDpad(); }
+        });
+      }
+
+      function setupListeners() {
+        window.addEventListener('resize', resizeCanvasDisplay);
+        window.addEventListener('keydown', e => {
+          keysDown[e.code] = true;
+          if (e.code === 'KeyQ' && players[0]) {
+            players[0].weaponIdx = (players[0].weaponIdx + 1) % WEAPONS.length;
+            updateHUD();
+          }
+          if (e.code === 'KeyE' && players[0]) {
+            placeLandmine(players[0]);
+          }
+        });
+        window.addEventListener('keyup', e => { keysDown[e.code] = false; });
+
+        document.querySelectorAll('#chapterTabs .chap-tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            document.querySelectorAll('#chapterTabs .chap-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentChapter = parseInt(tab.dataset.chap, 10);
+            renderStageCardsGallery();
+          });
+        });
+
+        document.getElementById('mode1PBtn').addEventListener('click', () => {
+          twoPlayerMode = false;
+          document.getElementById('mode1PBtn').classList.add('active');
+          document.getElementById('mode2PBtn').classList.remove('active');
+        });
+        document.getElementById('mode2PBtn').addEventListener('click', () => {
+          twoPlayerMode = true;
+          document.getElementById('mode2PBtn').classList.add('active');
+          document.getElementById('mode1PBtn').classList.remove('active');
+        });
+
+        document.getElementById('lobbySpeedBtn').addEventListener('click', cycleGlobalSpeed);
+        document.getElementById('battleSpeedBtn').addEventListener('click', cycleGlobalSpeed);
+        document.getElementById('auxSpeedBtn').addEventListener('click', () => {
+          if (!layoutEditMode) cycleGlobalSpeed();
+        });
+
+        document.getElementById('fullscreenLockBtn').addEventListener('click', async () => {
+          try {
+            if (document.documentElement.requestFullscreen) {
+              await document.documentElement.requestFullscreen();
+            }
+            if (screen.orientation && screen.orientation.lock) {
+              await screen.orientation.lock('landscape');
+            }
+            showToast('📱 已锁定全屏横屏掌机模式');
+          } catch (e) {
+            showToast('📱 已进入全屏模拟体验');
+          }
+        });
+
+        const settingsModal = document.getElementById('settingsModal');
+        document.getElementById('openSettingsLobbyBtn').addEventListener('click', () => settingsModal.classList.remove('hidden'));
+        document.getElementById('openSettingsBattleBtn').addEventListener('click', () => settingsModal.classList.remove('hidden'));
+        document.getElementById('closeSettingsBtn').addEventListener('click', () => settingsModal.classList.add('hidden'));
+        settingsModal.addEventListener('click', e => {
+          if (e.target === settingsModal) settingsModal.classList.add('hidden');
+        });
+
+        document.getElementById('quickLayoutEditBtn').addEventListener('click', enterLayoutEditMode);
+        document.getElementById('enterLayoutEditFromModalBtn').addEventListener('click', enterLayoutEditMode);
+        document.getElementById('resetLayoutBarBtn').addEventListener('click', () => resetControlLayout(false));
+        document.getElementById('saveLayoutBarBtn').addEventListener('click', () => exitLayoutEditMode(true));
+        document.getElementById('resetAllControlsBtn').addEventListener('click', () => resetControlLayout(true));
+
+        document.getElementById('editBarScaleSlider').addEventListener('input', e => {
+          controlLayout[selectedCtrlKey].scale = parseInt(e.target.value, 10);
+          persistSave();
+          applySettingsUI();
+        });
+
+        document.getElementById('editBarOpacitySlider').addEventListener('input', e => {
+          controlLayout[selectedCtrlKey].opacity = parseInt(e.target.value, 10);
+          persistSave();
+          applySettingsUI();
+        });
+
+        const guideModal = document.getElementById('guideModal');
+        document.getElementById('openGuideLobbyBtn').addEventListener('click', () => guideModal.classList.remove('hidden'));
+        document.getElementById('closeGuideBtn').addEventListener('click', () => guideModal.classList.add('hidden'));
+        guideModal.addEventListener('click', e => {
+          if (e.target === guideModal) guideModal.classList.add('hidden');
+        });
+
+        document.getElementById('dpadSizeSlider').addEventListener('input', e => {
+          controlLayout.dpad.scale = parseInt(e.target.value, 10);
+          persistSave();
+          applySettingsUI();
+        });
+        document.getElementById('fireSizeSlider').addEventListener('input', e => {
+          controlLayout.fire.scale = parseInt(e.target.value, 10);
+          persistSave();
+          applySettingsUI();
+        });
+        document.getElementById('auxSizeSlider').addEventListener('input', e => {
+          controlLayout.aux.scale = parseInt(e.target.value, 10);
+          persistSave();
+          applySettingsUI();
+        });
+
+        document.getElementById('opacitySlider').addEventListener('input', e => {
+          const val = parseInt(e.target.value, 10);
+          controlLayout.dpad.opacity = val;
+          controlLayout.fire.opacity = val;
+          controlLayout.aux.opacity = val;
+          persistSave();
+          applySettingsUI();
+        });
+        document.querySelectorAll('#opacityPresets .preset-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('#opacityPresets .preset-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const val = parseInt(btn.dataset.val, 10);
+            controlLayout.dpad.opacity = val;
+            controlLayout.fire.opacity = val;
+            controlLayout.aux.opacity = val;
+            persistSave();
+            applySettingsUI();
+          });
+        });
+
+        document.getElementById('speedSlider').addEventListener('input', e => {
+          saveState.speed = parseFloat(e.target.value);
+          persistSave();
+          applySettingsUI();
+        });
+        document.querySelectorAll('#speedPresets .preset-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('#speedPresets .preset-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            saveState.speed = parseFloat(btn.dataset.val);
+            persistSave();
+            applySettingsUI();
+          });
+        });
+
+        document.getElementById('sensSlider').addEventListener('input', e => {
+          saveState.sensitivity = parseFloat(e.target.value);
+          persistSave();
+          applySettingsUI();
+        });
+
+        document.getElementById('deadzoneSlider').addEventListener('input', e => {
+          saveState.deadzone = parseInt(e.target.value, 10);
+          persistSave();
+          applySettingsUI();
+        });
+
+        document.getElementById('toggleSoundBtn').addEventListener('click', () => {
+          saveState.soundOn = !(saveState.soundOn !== false);
+          persistSave();
+          applySettingsUI();
+        });
+
+        function activateGuardTurrets() {
+          baseTurretTimer = 1200;
+          SFX.powerup();
+          showToast('🗼 老巢两侧自动防空副炮已激活 20 秒！');
+        }
+        document.getElementById('guardTurretBtn').addEventListener('click', activateGuardTurrets);
+        document.getElementById('auxTurretBtn').addEventListener('click', () => {
+          if (!layoutEditMode) activateGuardTurrets();
+        });
+
+        function togglePauseState() {
+          if (layoutEditMode) return;
+          paused = !paused;
+          document.getElementById('pauseBtn').textContent = paused ? '▶️ 继续' : '⏸️ 暂停';
+          document.getElementById('auxPauseBtn').textContent = paused ? '▶️' : '⏸️';
+          showToast(paused ? '⏸️ 游戏已暂停' : '▶️ 继续战斗');
+        }
+        document.getElementById('pauseBtn').addEventListener('click', togglePauseState);
+        document.getElementById('auxPauseBtn').addEventListener('click', togglePauseState);
+
+        document.getElementById('restartBtn').addEventListener('click', () => {
+          if (layoutEditMode) exitLayoutEditMode(true);
+          startStage(currentStageIdx, isEditorMode && customEditorMap !== null);
+        });
+        document.getElementById('backLobbyBtn').addEventListener('click', () => {
+          if (layoutEditMode) exitLayoutEditMode(true);
+          document.getElementById('battleScreen').classList.add('hidden');
+          document.getElementById('lobbyScreen').classList.remove('hidden');
+          renderStageCardsGallery();
+        });
+
+        const btnA = document.getElementById('btnFireA');
+        const btnB = document.getElementById('btnFireB');
+        const btnC = document.getElementById('btnFireC');
+
+        btnA.addEventListener('touchstart', e => {
+          if (layoutEditMode) return;
+          e.preventDefault();
+          fireAPressed = true;
+          firePlayerWeapon(players[0], 'single');
+        }, { passive: false });
+        btnA.addEventListener('touchend', e => {
+          if (layoutEditMode) return;
+          e.preventDefault();
+          fireAPressed = false;
+        }, { passive: false });
+        btnA.addEventListener('mousedown', () => {
+          if (layoutEditMode) return;
+          fireAPressed = true;
+          firePlayerWeapon(players[0], 'single');
+        });
+        window.addEventListener('mouseup', () => { fireAPressed = false; fireBPressed = false; });
+
+        btnB.addEventListener('touchstart', e => {
+          if (layoutEditMode) return;
+          e.preventDefault();
+          fireBPressed = true;
+          firePlayerWeapon(players[0], 'rapid');
+        }, { passive: false });
+        btnB.addEventListener('touchend', e => {
+          if (layoutEditMode) return;
+          e.preventDefault();
+          fireBPressed = false;
+        }, { passive: false });
+        btnB.addEventListener('mousedown', () => {
+          if (layoutEditMode) return;
+          fireBPressed = true;
+          firePlayerWeapon(players[0], 'rapid');
+        });
+
+        btnC.addEventListener('click', () => {
+          if (!layoutEditMode) firePlayerWeapon(players[0], 'barrage');
+        });
+
+        document.getElementById('cycleWeaponBtn').addEventListener('click', () => {
+          if (layoutEditMode || !players[0]) return;
+          players[0].weaponIdx = (players[0].weaponIdx + 1) % WEAPONS.length;
+          updateHUD();
+          showToast(`切换主武器: ${WEAPONS[players[0].weaponIdx].name}`);
+        });
+
+        document.getElementById('placeMineBtn').addEventListener('click', () => {
+          if (!layoutEditMode) placeLandmine(players[0]);
+        });
+
+        document.getElementById('openEditorLobbyBtn').addEventListener('click', () => {
+          isEditorMode = true;
+          customEditorMap = Array.from({ length: GRID_H }, () => Array(GRID_W).fill(T_EMPTY));
+          buildBaseWall(customEditorMap, T_BRICK);
+          for (let dr = 0; dr < 2; dr++) {
+            for (let dc = 0; dc < 2; dc++) {
+              customEditorMap[BASE_R + dr][BASE_C + dc] = T_EAGLE;
+            }
+          }
+          startStage(0, true);
+          paused = true;
+          showToast('🛠️ 点击/拖动地图格子绘制地形，完成后点「试玩当前地图」');
+        });
+
+        document.querySelectorAll('#editorToolbar .tile-tool[data-tile]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('#editorToolbar .tile-tool[data-tile]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedEditorTile = parseInt(btn.dataset.tile, 10);
+          });
+        });
+
+        document.getElementById('editorPlayBtn').addEventListener('click', () => {
+          customEditorMap = map.map(r => r.slice());
+          paused = false;
+          showToast('▶️ 开始试玩自定义战场！');
+        });
+
+        document.getElementById('editorClearBtn').addEventListener('click', () => {
+          resetBrickMasks();
+          map = Array.from({ length: GRID_H }, () => Array(GRID_W).fill(T_EMPTY));
+          buildBaseWall(map, T_BRICK);
+          for (let dr = 0; dr < 2; dr++) {
+            for (let dc = 0; dc < 2; dc++) {
+              map[BASE_R + dr][BASE_C + dc] = T_EAGLE;
+            }
+          }
+          customEditorMap = map.map(r => r.slice());
+          renderGame();
+        });
+
+        function paintCanvasTile(clientX, clientY) {
+          if (!isEditorMode || !paused) return;
+          const rect = canvas.getBoundingClientRect();
+          const gx = Math.floor(((clientX - rect.left) / rect.width) * CANVAS_W);
+          const gy = Math.floor(((clientY - rect.top) / rect.height) * CANVAS_H);
+          const mc = Math.floor(gx / 32) * 2;
+          const mr = Math.floor(gy / 32) * 2;
+          if (mc < 0 || mc >= GRID_W || mr < 0 || mr >= GRID_H) return;
+          if (mc === BASE_C && mr === BASE_R) return;
+          for (let dr = 0; dr < 2; dr++) {
+            for (let dc = 0; dc < 2; dc++) {
+              map[mr + dr][mc + dc] = selectedEditorTile;
+              brickMask[mr + dr][mc + dc] = FULL_BRICK_MASK;
+            }
+          }
+          customEditorMap = map.map(r => r.slice());
+          renderGame();
+        }
+
+        let painting = false;
+        canvas.addEventListener('mousedown', e => { painting = true; paintCanvasTile(e.clientX, e.clientY); });
+        canvas.addEventListener('mousemove', e => { if (painting) paintCanvasTile(e.clientX, e.clientY); });
+        window.addEventListener('mouseup', () => { painting = false; });
+        canvas.addEventListener('touchstart', e => {
+          if (isEditorMode && paused) {
+            e.preventDefault();
+            paintCanvasTile(e.touches[0].clientX, e.touches[0].clientY);
+          }
+        }, { passive: false });
+        canvas.addEventListener('touchmove', e => {
+          if (isEditorMode && paused) {
+            e.preventDefault();
+            paintCanvasTile(e.touches[0].clientX, e.touches[0].clientY);
+          }
+        }, { passive: false });
+
+        setupDpadTouch();
+        setupLayoutDragHandlers();
+        enableTouchDragScroll(document.getElementById('settingsScrollBody'));
+        enableTouchDragScroll(document.getElementById('guideScrollBody'));
+        enableTouchDragScroll(document.getElementById('stageScrollArea'));
+      }
+
+      window.onAndroidBackPressed = function () {
+        if (layoutEditMode) {
+          exitLayoutEditMode(true);
+          return true;
+        }
+        const settingsModal = document.getElementById('settingsModal');
+        const guideModal = document.getElementById('guideModal');
+        const battleScreen = document.getElementById('battleScreen');
+        if (!settingsModal.classList.contains('hidden')) {
+          settingsModal.classList.add('hidden');
+          return true;
+        }
+        if (!guideModal.classList.contains('hidden')) {
+          guideModal.classList.add('hidden');
+          return true;
+        }
+        if (!battleScreen.classList.contains('hidden')) {
+          battleScreen.classList.add('hidden');
+          document.getElementById('lobbyScreen').classList.remove('hidden');
+          renderStageCardsGallery();
+          return true;
+        }
+        return false;
+      };
+
+      /* ================= INITIALIZATION ================= */
+      window.onload = function () {
+        try {
+          applySettingsUI();
+          renderGuideModal();
+          renderStageCardsGallery();
+          setupListeners();
+          resizeCanvasDisplay();
+          if (rafId) cancelAnimationFrame(rafId);
+          rafId = requestAnimationFrame(loop);
+        } catch (err) {
+          console.error('Game initialization error:', err);
+          showToast('⚠️ 初始化异常，请刷新重试');
+        }
+      };
+    })();
+  </script>
+</body>
+</html>
